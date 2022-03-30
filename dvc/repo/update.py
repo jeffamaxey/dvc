@@ -26,7 +26,7 @@ def update(
             "--remote can't be used without --to-remote"
         )
 
-    stages = set()
+    stages = {}
     for target in targets:
         stages.update(self.stage.collect(target, recursive=recursive))
 
@@ -34,6 +34,5 @@ def update(
         stage.update(rev, to_remote=to_remote, remote=remote, jobs=jobs)
         dvcfile = Dvcfile(self, stage.path)
         dvcfile.dump(stage)
-        stages.add(stage)
 
     return list(stages)
