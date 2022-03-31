@@ -26,7 +26,7 @@ def update(
             "--remote can't be used without --to-remote"
         )
 
-    stages = {}
+    stages = set()
     for target in targets:
         stages.update(self.stage.collect(target, recursive=recursive))
 
