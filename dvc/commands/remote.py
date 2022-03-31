@@ -113,8 +113,8 @@ class CmdRemoteDefault(CmdRemote):
 class CmdRemoteList(CmdRemote):
     def run(self):
         conf = self.config.read(self.args.level)
-        for name, conf in conf["remote"].items():
-            ui.write(name, conf["url"], sep="\t")
+        for name, conf_val in conf["remote"].items():
+            ui.write(name, conf_val["url"], sep="\t")
         return 0
 
 
