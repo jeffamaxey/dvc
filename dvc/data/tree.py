@@ -19,6 +19,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class TreeError(Exception):
+    pass
+
+
 def _try_load(
     odbs: Iterable["ObjectDB"],
     hash_info: "HashInfo",
@@ -196,6 +200,27 @@ class Tree(HashFile):
             return None
         tree.digest()
         return tree
+
+    def ls(self, prefix=None):
+        kwargs = {}
+        if prefix:
+            kwargs["prefix"] = prefix
+
+        meta, hash_info = self._trie.get(prefix, (None, None))
+        if hash_info and hash_info.isdir and meta and not meta.obj:
+            raise TreeError
+
+        ret = []
+
+        def node_factory(_, key, children, *args):
+            if key == prefix:
+                list(children)
+            else:
+                ret.append(key[-1])
+
+        self._trie.traverse(node_factory, **kwargs)
+
+        return ret
 
 
 def du(odb, tree):
