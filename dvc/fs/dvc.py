@@ -43,7 +43,7 @@ class _DvcFileSystem(AbstractFileSystem):  # pylint:disable=abstract-method
 
         fs_key = "repo"
         key = path.split(self.sep)
-        if key == ["."] or key == [""]:
+        if key in [["."], [""]]:
             key = ()
 
         return (fs_key, *key)
@@ -91,10 +91,7 @@ class _DvcFileSystem(AbstractFileSystem):  # pylint:disable=abstract-method
         except KeyError as exc:
             raise FileNotFoundError from exc
 
-        if not detail:
-            return entries
-
-        return [self.info(epath) for epath in entries]
+        return [self.info(epath) for epath in entries] if detail else entries
 
     def isdvc(self, path, recursive=False, strict=True):
         try:
@@ -125,8 +122,7 @@ class _DvcFileSystem(AbstractFileSystem):  # pylint:disable=abstract-method
         }
 
         if len(outs) > 1 and outs[0][0] != key:
-            shortest = self.repo.index.tree.shortest_prefix(key)
-            if shortest:
+            if shortest := self.repo.index.tree.shortest_prefix(key):
                 assert shortest[1][1].isdir
                 if len(shortest[0]) <= len(key):
                     ret["isdvc"] = True
@@ -161,8 +157,7 @@ class _DvcFileSystem(AbstractFileSystem):  # pylint:disable=abstract-method
 
     def checksum(self, path):
         info = self.info(path)
-        md5 = info.get("md5")
-        if md5:
+        if md5 := info.get("md5"):
             return md5
         raise NotImplementedError
 

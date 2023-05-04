@@ -66,10 +66,9 @@ def _read_params(
 
     if deps:
         for param in params:
-            params_dict = error_handler(param.read_params)(
+            if params_dict := error_handler(param.read_params)(
                 onerror=onerror, flatten=False
-            )
-            if params_dict:
+            ):
                 res[
                     repo.fs.path.relpath(param.fs_path, os.getcwd())
                 ] = params_dict
@@ -77,8 +76,7 @@ def _read_params(
         fs_paths += [param.fs_path for param in params]
 
     for fs_path in fs_paths:
-        from_path = _read_fs_path(repo.fs, fs_path, onerror=onerror)
-        if from_path:
+        if from_path := _read_fs_path(repo.fs, fs_path, onerror=onerror):
             res[repo.fs.path.relpath(fs_path, os.getcwd())] = from_path
 
     return res
@@ -105,11 +103,9 @@ def show(repo, revs=None, targets=None, deps=False, onerror: Callable = None):
     res = {}
 
     for branch in repo.brancher(revs=revs):
-        params = error_handler(_gather_params)(
+        if params := error_handler(_gather_params)(
             repo=repo, rev=branch, targets=targets, deps=deps, onerror=onerror
-        )
-
-        if params:
+        ):
             res[branch] = params
 
     # Hide workspace params if they are the same as in the active branch
@@ -123,8 +119,7 @@ def show(repo, revs=None, targets=None, deps=False, onerror: Callable = None):
         if res.get("workspace") == res.get(active_branch):
             res.pop("workspace", None)
 
-    errored = errored_revisions(res)
-    if errored:
+    if errored := errored_revisions(res):
         ui.error_write(
             "DVC failed to load some parameters for following revisions:"
             f" '{', '.join(errored)}'."

@@ -246,7 +246,7 @@ class BaseExecutor(ABC):
         exp_data = {}
         for stage in stages:
             if isinstance(stage, PipelineStage):
-                exp_data.update(to_lockfile(stage))
+                exp_data |= to_lockfile(stage)
         return dict_sha256(exp_data)
 
     def cleanup(self):
@@ -404,19 +404,15 @@ class BaseExecutor(ABC):
             info.dump_json(infofile)
 
         with cls._repro_dvc(
-            info,
-            log_errors=log_errors,
-            **kwargs,
-        ) as dvc:
+                info,
+                log_errors=log_errors,
+                **kwargs,
+            ) as dvc:
             if auto_push:
                 cls._validate_remotes(dvc, git_remote)
 
             args, kwargs = cls._repro_args(dvc)
-            if args:
-                targets: Optional[Union[list, str]] = args[0]
-            else:
-                targets = kwargs.get("targets")
-
+            targets = args[0] if args else kwargs.get("targets")
             repro_force = kwargs.get("force", False)
             logger.trace(  # type: ignore[attr-defined]
                 "Executor repro with force = '%s'", str(repro_force)
@@ -523,8 +519,7 @@ class BaseExecutor(ABC):
             ExpRefInfo.from_ref(ref) if ref else None
         )
         if cls.WARN_UNTRACKED:
-            untracked = dvc.scm.untracked_files()
-            if untracked:
+            if untracked := dvc.scm.untracked_files():
                 logger.warning(
                     "The following untracked files were present in "
                     "the experiment directory after reproduction but "

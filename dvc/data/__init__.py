@@ -20,9 +20,7 @@ def check(odb: "ObjectDB", obj: "HashFile", **kwargs):
 
 
 def load(odb: "ObjectDB", hash_info: "HashInfo") -> "HashFile":
-    if hash_info.isdir:
-        return Tree.load(odb, hash_info)
-    return odb.get(hash_info)
+    return Tree.load(odb, hash_info) if hash_info.isdir else odb.get(hash_info)
 
 
 def iterobjs(

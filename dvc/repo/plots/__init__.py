@@ -35,8 +35,7 @@ logger = logging.getLogger(__name__)
 class PlotMetricTypeError(DvcException):
     def __init__(self, file):
         super().__init__(
-            "'{}' - file type error\n"
-            "Only JSON, YAML, CSV and TSV formats are supported.".format(file)
+            f"'{file}' - file type error\nOnly JSON, YAML, CSV and TSV formats are supported."
         )
 
 
@@ -114,12 +113,12 @@ class Plots:
                 plot_files = []
                 unpacking_res = _unpack_dir_files(fs, fs_path, onerror=onerror)
                 if "data" in unpacking_res:
-                    for pi in unpacking_res.get(  # pylint: disable=E1101
-                        "data"
-                    ):
-                        plot_files.append(
-                            (pi, relpath(pi, self.repo.root_dir))
+                    plot_files.extend(
+                        (pi, relpath(pi, self.repo.root_dir))
+                        for pi in unpacking_res.get(  # pylint: disable=E1101
+                            "data"
                         )
+                    )
                 else:
                     res[relpath(fs_path, self.repo.root_dir)] = unpacking_res
             else:
@@ -162,13 +161,11 @@ class Plots:
             revision_data = first(data.values())
             if "data" in revision_data:
                 for path_data in revision_data["data"].values():
-                    result_source = path_data.pop("data_source", None)
-                    if result_source:
+                    if result_source := path_data.pop("data_source", None):
                         path_data.update(result_source())
-            result.update(data)
+            result |= data
 
-        errored = errored_revisions(result)
-        if errored:
+        if errored := errored_revisions(result):
             from dvc.ui import ui
 
             ui.error_write(
@@ -185,8 +182,7 @@ class Plots:
 
     @staticmethod
     def _unset(out, props):
-        missing = list(set(props) - set(out.plot.keys()))
-        if missing:
+        if missing := list(set(props) - set(out.plot.keys())):
             raise PropsNotFoundError(
                 f"display properties {missing} not found in plot '{out}'"
             )
@@ -200,8 +196,7 @@ class Plots:
         from dvc.dvcfile import Dvcfile
 
         props = props or {}
-        template = props.get("template")
-        if template:
+        if template := props.get("template"):
             get_template(template, self.templates_dir)
 
         (out,) = self.repo.find_outs_by_path(path)
@@ -251,9 +246,9 @@ def _collect_plots(
         recursive=recursive,
     )
 
-    result = {plot.fs_path: _plot_props(plot) for plot in plots}
-    result.update({fs_path: {} for fs_path in fs_paths})
-    return result
+    return {plot.fs_path: _plot_props(plot) for plot in plots} | {
+        fs_path: {} for fs_path in fs_paths
+    }
 
 
 @error_handler
@@ -276,14 +271,11 @@ def parse(fs, path, props=None, **kwargs):
 def _plot_props(out: "Output") -> Dict:
     from dvc.schema import PLOT_PROPS
 
-    if not (out.plot or out.live):
+    if not out.plot and not out.live:
         raise NotAPlotError(out)
     if isinstance(out.plot, list):
         raise DvcException("Multiple plots per data file not supported.")
-    if isinstance(out.plot, bool):
-        return {}
-
-    return project(out.plot, PLOT_PROPS)
+    return {} if isinstance(out.plot, bool) else project(out.plot, PLOT_PROPS)
 
 
 def _load_sv(path, fs, delimiter=",", header=True):

@@ -46,10 +46,7 @@ class RepoDependency(Dependency):
         current = self.get_obj(locked=True).hash_info
         updated = self.get_obj(locked=False).hash_info
 
-        if current != updated:
-            return {str(self): "update available"}
-
-        return {}
+        return {str(self): "update available"} if current != updated else {}
 
     def status(self):
         return self.workspace_status()

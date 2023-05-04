@@ -121,8 +121,7 @@ class BaseS3FileSystem(ObjectFSWrapper):
             login_info["profile"]
         )
 
-        shared_creds = config.get("credentialpath")
-        if shared_creds:
+        if shared_creds := config.get("credentialpath"):
             os.environ.setdefault("AWS_SHARED_CREDENTIALS_FILE", shared_creds)
 
         if (
@@ -133,8 +132,7 @@ class BaseS3FileSystem(ObjectFSWrapper):
             # Enable bucket region caching
             login_info["cache_regions"] = config.get("cache_regions", True)
 
-        config_path = config.get("configpath")
-        if config_path:
+        if config_path := config.get("configpath"):
             os.environ.setdefault("AWS_CONFIG_FILE", config_path)
 
         return unflatten(

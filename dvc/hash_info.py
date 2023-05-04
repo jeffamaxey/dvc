@@ -38,6 +38,4 @@ class HashInfo:
 
     @property
     def isdir(self):
-        if not self:
-            return False
-        return self.value.endswith(HASH_DIR_SUFFIX)
+        return self.value.endswith(HASH_DIR_SUFFIX) if self else False

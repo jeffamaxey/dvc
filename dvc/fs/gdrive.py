@@ -18,12 +18,7 @@ class GDriveAuthError(DvcException):
     def __init__(self, cred_location):
 
         if cred_location:
-            message = (
-                "GDrive remote auth failed with credentials in '{}'.\n"
-                "Backup first, remove or fix them, and run DVC again.\n"
-                "It should do auth again and refresh the credentials.\n\n"
-                "Details:".format(cred_location)
-            )
+            message = f"GDrive remote auth failed with credentials in '{cred_location}'.\nBackup first, remove or fix them, and run DVC again.\nIt should do auth again and refresh the credentials.\n\nDetails:"
         else:
             message = "Failed to authenticate GDrive remote"
 
@@ -54,10 +49,7 @@ class GDriveFileSystem(FSSpecWrapper):  # pylint:disable=abstract-method
 
         if not opts["host"]:
             raise DvcException(
-                "Empty GDrive URL '{}'. Learn more at {}".format(
-                    config["url"],
-                    format_link("https://man.dvc.org/remote/add"),
-                )
+                f"""Empty GDrive URL '{config["url"]}'. Learn more at {format_link("https://man.dvc.org/remote/add")}"""
             )
 
         self._bucket = opts["host"]
@@ -111,24 +103,16 @@ class GDriveFileSystem(FSSpecWrapper):  # pylint:disable=abstract-method
             and not self._service_account_json_file_path
         ):
             raise DvcException(
-                "To use service account, set "
-                "`gdrive_service_account_json_file_path`, and optionally"
-                "`gdrive_service_account_user_email` in DVC config\n"
-                "Learn more at {}".format(
-                    format_link("https://man.dvc.org/remote/modify")
-                )
+                f'To use service account, set `gdrive_service_account_json_file_path`, and optionally`gdrive_service_account_user_email` in DVC config\nLearn more at {format_link("https://man.dvc.org/remote/modify")}'
             )
 
         # Validate OAuth 2.0 Client ID configuration
-        if not self._use_service_account:
-            if bool(self._client_id) != bool(self._client_secret):
-                raise DvcException(
-                    "Please specify GDrive's client ID and secret in "
-                    "DVC config or omit both to use the defaults.\n"
-                    "Learn more at {}".format(
-                        format_link("https://man.dvc.org/remote/modify")
-                    )
-                )
+        if not self._use_service_account and bool(self._client_id) != bool(
+            self._client_secret
+        ):
+            raise DvcException(
+                f"""Please specify GDrive's client ID and secret in DVC config or omit both to use the defaults.\nLearn more at {format_link("https://man.dvc.org/remote/modify")}"""
+            )
 
     @cached_property
     def credentials_location(self):
@@ -152,22 +136,14 @@ class GDriveFileSystem(FSSpecWrapper):  # pylint:disable=abstract-method
         DVC config client id or secret but forgets to remove the cached
         credentials file.
         """
-        if not os.getenv(GDriveFileSystem.GDRIVE_CREDENTIALS_DATA):
-            if (
-                settings["client_config"]["client_id"]
-                != auth.credentials.client_id
-                or settings["client_config"]["client_secret"]
-                != auth.credentials.client_secret
-            ):
-                logger.warning(
-                    "Client ID and secret configured do not match the "
-                    "actual ones used\nto access the remote. Do you "
-                    "use multiple GDrive remotes and forgot to\nset "
-                    "`gdrive_user_credentials_file` for one or more of them? "
-                    "Learn more at\n{}.\n".format(
-                        format_link("https://man.dvc.org/remote/modify")
-                    )
-                )
+        if not os.getenv(GDriveFileSystem.GDRIVE_CREDENTIALS_DATA) and (
+            settings["client_config"]["client_id"] != auth.credentials.client_id
+            or settings["client_config"]["client_secret"]
+            != auth.credentials.client_secret
+        ):
+            logger.warning(
+                f'Client ID and secret configured do not match the actual ones used\nto access the remote. Do you use multiple GDrive remotes and forgot to\nset `gdrive_user_credentials_file` for one or more of them? Learn more at\n{format_link("https://man.dvc.org/remote/modify")}.\n'
+            )
 
     @wrap_prop(threading.RLock())
     @cached_property
@@ -228,9 +204,7 @@ class GDriveFileSystem(FSSpecWrapper):  # pylint:disable=abstract-method
 
         try:
             logger.debug(
-                "GDrive remote auth with config '{}'.".format(
-                    GoogleAuth.DEFAULT_SETTINGS
-                )
+                f"GDrive remote auth with config '{GoogleAuth.DEFAULT_SETTINGS}'."
             )
             if self._use_service_account:
                 gauth.ServiceAuth()
@@ -238,10 +212,6 @@ class GDriveFileSystem(FSSpecWrapper):  # pylint:disable=abstract-method
                 gauth.CommandLineAuth()
                 GDriveFileSystem._validate_credentials(gauth, auth_settings)
 
-        # Handle AuthenticationError, RefreshError and other auth failures
-        # It's hard to come up with a narrow exception, since PyDrive throws
-        # a lot of different errors - broken credentials file, refresh token
-        # expired, flow failed, etc.
         except Exception as exc:
             raise GDriveAuthError(self.credentials_location) from exc
         finally:

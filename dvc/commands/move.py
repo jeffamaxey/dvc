@@ -14,9 +14,7 @@ class CmdMove(CmdBase):
         try:
             self.repo.move(self.args.src, self.args.dst)
         except DvcException:
-            msg = "failed to move '{}' -> '{}'".format(
-                self.args.src, self.args.dst
-            )
+            msg = f"failed to move '{self.args.src}' -> '{self.args.dst}'"
             logger.exception(msg)
             return 1
         return 0

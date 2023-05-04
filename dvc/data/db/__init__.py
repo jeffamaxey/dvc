@@ -57,9 +57,7 @@ class ODBManager:
         self.config = config = repo.config["cache"]
         self._odb = {}
 
-        local = config.get("local")
-
-        if local:
+        if local := config.get("local"):
             settings = {"name": local}
         elif "dir" not in config:
             settings = None

@@ -69,18 +69,14 @@ class TestImport:
         # prefix based storage services (e.g s3) doesn't have the real concept
         # of directories. So instead we create an empty file that ends with a
         # trailing slash in order to actually support this operation
-        if is_object_storage:
-            contents = ""
-        else:
-            contents = {}
-
+        contents = "" if is_object_storage else {}
         workspace.gen({"empty_dir/": contents})
 
         dvc.imp_url("remote://workspace/empty_dir/")
 
         empty_dir = tmp_dir / "empty_dir"
         assert empty_dir.is_dir()
-        assert tuple(empty_dir.iterdir()) == ()
+        assert not tuple(empty_dir.iterdir())
 
 
 class TestAdd:

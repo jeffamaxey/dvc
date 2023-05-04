@@ -34,10 +34,7 @@ def get_mtime_and_size(path, fs, dvcignore=None):
     if fs.isdir(path):
         size = 0
         files_mtimes = {}
-        if dvcignore:
-            walk_iterator = dvcignore.find(fs, path)
-        else:
-            walk_iterator = fs.find(path)
+        walk_iterator = dvcignore.find(fs, path) if dvcignore else fs.find(path)
         for file_path in walk_iterator:
             try:
                 stats = fs.info(file_path)
@@ -63,9 +60,7 @@ def get_mtime_and_size(path, fs, dvcignore=None):
 
 class BasePathNotInCheckedPathException(DvcException):
     def __init__(self, path, base_path):
-        msg = "Path: {} does not overlap with base path: {}".format(
-            path, base_path
-        )
+        msg = f"Path: {path} does not overlap with base path: {base_path}"
         super().__init__(msg)
 
 
@@ -162,11 +157,8 @@ def makedirs(path, exist_ok=False, mode=None):
     if not tail:
         head, tail = os.path.split(head)
     if head and tail and not os.path.exists(head):
-        try:
+        with suppress(FileExistsError):
             makedirs(head, exist_ok=exist_ok, mode=mode)
-        except FileExistsError:
-            # Defeats race condition when another thread created the path
-            pass
         cdir = os.curdir
         if isinstance(tail, bytes):
             cdir = bytes(os.curdir, "ASCII")
@@ -202,21 +194,21 @@ def copyfile(src, dest, callback=None, no_progress_bar=False, name=None):
     except OSError:
         from dvc.fs._callback import tdqm_or_callback_wrapped
 
-        with open(src, "rb") as fsrc, open(dest, "wb+") as fdest:
+        with (open(src, "rb") as fsrc, open(dest, "wb+") as fdest):
             with tdqm_or_callback_wrapped(
-                fdest,
-                "write",
-                total,
-                callback=callback,
-                disable=no_progress_bar,
-                desc=name,
-            ) as wrapped:
+                            fdest,
+                            "write",
+                            total,
+                            callback=callback,
+                            disable=no_progress_bar,
+                            desc=name,
+                        ) as wrapped:
                 while True:
-                    buf = fsrc.read(LOCAL_CHUNK_SIZE)
-                    if not buf:
-                        break
-                    wrapped.write(buf)
+                    if buf := fsrc.read(LOCAL_CHUNK_SIZE):
+                        wrapped.write(buf)
 
+                    else:
+                        break
     if callback:
         callback.absolute_update(total)
 

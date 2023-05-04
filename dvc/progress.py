@@ -157,8 +157,7 @@ class Tqdm(tqdm):
         ncols_left = (
             ncols - len(self.format_meter(ncols_desc=1, ncols_info=1, **d)) + 1
         )
-        ncols_left = max(ncols_left, 0)
-        if ncols_left:
+        if ncols_left := max(ncols_left, 0):
             d["ncols_desc"] = d["ncols_info"] = ncols_left
         else:
             # work-around for zero-width description

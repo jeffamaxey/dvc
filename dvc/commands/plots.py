@@ -75,8 +75,9 @@ class CmdPlots(CmdBase):
             )
 
             if self.args.show_vega:
-                renderer = first(filter(lambda r: r.TYPE == "vega", renderers))
-                if renderer:
+                if renderer := first(
+                    filter(lambda r: r.TYPE == "vega", renderers)
+                ):
                     ui.write_json(json.loads(renderer.get_filled_template()))
                 return 0
             if self.args.json:
@@ -307,12 +308,7 @@ def _add_props_arguments(parser):
         "--template",
         nargs="?",
         default=None,
-        help=(
-            "Special JSON or HTML schema file to inject with the data. "
-            "See {}".format(
-                format_link("https://man.dvc.org/plots#plot-templates")
-            )
-        ),
+        help=f'Special JSON or HTML schema file to inject with the data. See {format_link("https://man.dvc.org/plots#plot-templates")}',
         metavar="<path>",
     ).complete = completion.FILE
     parser.add_argument(

@@ -19,8 +19,7 @@ class CmdExperimentsList(CmdBase):
         for baseline in exps:
             tag = self.repo.scm.describe(baseline)
             if not tag:
-                branch = self.repo.scm.describe(baseline, base="refs/heads")
-                if branch:
+                if branch := self.repo.scm.describe(baseline, base="refs/heads"):
                     tag = branch.split("/")[-1]
             name = tag if tag else baseline[:7]
             if not names_only:

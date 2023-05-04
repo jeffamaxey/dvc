@@ -82,8 +82,7 @@ def gc(
         return
 
     odb = self.cloud.get_remote_odb(remote, "gc -c")
-    removed = ogc(odb, used_obj_ids, jobs=jobs)
-    if removed:
+    if removed := ogc(odb, used_obj_ids, jobs=jobs):
         get_index(odb).clear()
     else:
         logger.info("No unused cache to remove from remote.")

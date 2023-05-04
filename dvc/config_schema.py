@@ -32,11 +32,8 @@ def supported_cache_type(types):
     if isinstance(types, str):
         types = [typ.strip() for typ in types.split(",")]
 
-    unsupported = set(types) - {"reflink", "hardlink", "symlink", "copy"}
-    if unsupported:
-        raise Invalid(
-            "Unsupported cache type(s): {}".format(", ".join(unsupported))
-        )
+    if unsupported := set(types) - {"reflink", "hardlink", "symlink", "copy"}:
+        raise Invalid(f'Unsupported cache type(s): {", ".join(unsupported)}')
 
     return types
 
@@ -48,7 +45,7 @@ def Choices(*choices):
         *choices: pass allowed values as arguments, or pass a list or
             tuple as a single argument
     """
-    return Any(*choices, msg="expected one of {}".format(", ".join(choices)))
+    return Any(*choices, msg=f'expected one of {", ".join(choices)}')
 
 
 def ByUrl(mapping):
@@ -137,7 +134,7 @@ SCHEMA = {
     "remote": {
         str: ByUrl(
             {
-                "": {**LOCAL_COMMON, **REMOTE_COMMON},
+                "": LOCAL_COMMON | REMOTE_COMMON,
                 "s3": {
                     "region": str,
                     "profile": str,
@@ -227,11 +224,11 @@ SCHEMA = {
                     Optional("verify", default=True): Bool,
                     **REMOTE_COMMON,
                 },
-                "http": {**HTTP_COMMON, **REMOTE_COMMON},
-                "https": {**HTTP_COMMON, **REMOTE_COMMON},
-                "webdav": {**WEBDAV_COMMON, **REMOTE_COMMON},
-                "webdavs": {**WEBDAV_COMMON, **REMOTE_COMMON},
-                "remote": {str: object},  # Any of the above options are valid
+                "http": HTTP_COMMON | REMOTE_COMMON,
+                "https": HTTP_COMMON | REMOTE_COMMON,
+                "webdav": WEBDAV_COMMON | REMOTE_COMMON,
+                "webdavs": WEBDAV_COMMON | REMOTE_COMMON,
+                "remote": {str: object},
             }
         )
     },
@@ -260,7 +257,6 @@ SCHEMA = {
             "setup_script": str,
         },
     },
-    # section for experimental features
     "feature": {
         Optional("machine", default=False): Bool,
         # enabled by default. It's of no use, kept for backward compatibility.

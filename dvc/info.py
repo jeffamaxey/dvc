@@ -98,19 +98,16 @@ def _get_supported_remotes():
     supported_remotes = []
     for scheme, fs_cls in FS_MAP.items():
         if not fs_cls.get_missing_deps():
-            dependencies = []
-            for requirement in fs_cls.REQUIRES:
-                dependencies.append(
-                    f"{requirement} = "
-                    f"{importlib_metadata.version(requirement)}"
-                )
-
+            dependencies = [
+                f"{requirement} = {importlib_metadata.version(requirement)}"
+                for requirement in fs_cls.REQUIRES
+            ]
             remote_info = scheme
             if dependencies:
                 remote_info += " (" + ", ".join(dependencies) + ")"
             supported_remotes.append(remote_info)
 
-    assert len(supported_remotes) >= 1
+    assert supported_remotes
     return "\n\t" + ",\n\t".join(supported_remotes)
 
 
@@ -120,17 +117,21 @@ def get_fs_type(path):
         if part.fstype != "":
             try:
                 mountpoint = pathlib.Path(part.mountpoint).resolve()
-                partition[mountpoint] = part.fstype + " on " + part.device
+                partition[mountpoint] = f"{part.fstype} on {part.device}"
             except PermissionError:
                 pass
 
     # need to follow the symlink: https://github.com/iterative/dvc/issues/5065
     path = pathlib.Path(path).resolve()
 
-    for parent in itertools.chain([path], path.parents):
-        if parent in partition:
-            return partition[parent]
-    return ("unknown", "none")
+    return next(
+        (
+            partition[parent]
+            for parent in itertools.chain([path], path.parents)
+            if parent in partition
+        ),
+        ("unknown", "none"),
+    )
 
 
 def _get_dvc_repo_info(self):

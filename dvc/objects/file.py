@@ -36,12 +36,14 @@ class HashFile:
         return bool(self.hash_info)
 
     def __eq__(self, other):
-        if not isinstance(other, HashFile):
-            return False
         return (
-            self.fs_path == other.fs_path
-            and self.fs == other.fs
-            and self.hash_info == other.hash_info
+            (
+                self.fs_path == other.fs_path
+                and self.fs == other.fs
+                and self.hash_info == other.hash_info
+            )
+            if isinstance(other, HashFile)
+            else False
         )
 
     def __hash__(self):

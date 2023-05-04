@@ -14,18 +14,18 @@ NAME_REGEX = r"^(?P<remote>remote\.)?(?P<section>[^\.]*)\.(?P<option>[^\.]*)$"
 def _name_type(value):
     import re
 
-    match = re.match(NAME_REGEX, value)
-    if not match:
+    if match := re.match(NAME_REGEX, value):
+        return (
+            bool(match.group("remote")),
+            match.group("section").lower(),
+            match.group("option").lower(),
+        )
+    else:
         raise argparse.ArgumentTypeError(
             "name argument should look like "
             "remote.name.option or "
             "section.option"
         )
-    return (
-        bool(match.group("remote")),
-        match.group("section").lower(),
-        match.group("option").lower(),
-    )
 
 
 class CmdConfig(CmdBaseNoRepo):
@@ -37,13 +37,12 @@ class CmdConfig(CmdBaseNoRepo):
         self.config = Config(validate=False)
 
     def run(self):
-        if self.args.show_origin:
-            if any((self.args.value, self.args.unset)):
-                logger.error(
-                    "--show-origin can't be used together with any of these "
-                    "options: -u/--unset, value"
-                )
-                return 1
+        if self.args.show_origin and any((self.args.value, self.args.unset)):
+            logger.error(
+                "--show-origin can't be used together with any of these "
+                "options: -u/--unset, value"
+            )
+            return 1
 
         if self.args.list:
             return self._list()
@@ -74,8 +73,7 @@ class CmdConfig(CmdBaseNoRepo):
             prefix = self._config_file_prefix(
                 self.args.show_origin, self.config, level
             )
-            configs = list(self._format_config(conf, prefix))
-            if configs:
+            if configs := list(self._format_config(conf, prefix)):
                 ui.write("\n".join(configs))
 
         return 0

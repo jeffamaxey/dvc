@@ -88,10 +88,9 @@ def _collect_specific_target(
         msg = "Checking if stage '%s' is in '%s'"
         logger.debug(msg, target, PIPELINE_FILE)
         if not (recursive and loader.fs.isdir(target)):
-            stages = _maybe_collect_from_dvc_yaml(
+            if stages := _maybe_collect_from_dvc_yaml(
                 loader, target, with_deps, accept_group=accept_group
-            )
-            if stages:
+            ):
                 return stages, file, name
     elif not with_deps and is_valid_filename(file):
         stages = loader.load_all(file, name, accept_group=accept_group)
@@ -239,16 +238,14 @@ class StageLoad:
         glob: bool = False,
     ) -> Iterable[str]:
 
-        assert not (accept_group and glob)
+        assert not accept_group or not glob
 
         if not name:
             return stages.keys()
 
         if accept_group and stages.is_foreach_generated(name):
             return self._get_group_keys(stages, name)
-        if glob:
-            return fnmatch.filter(stages.keys(), name)
-        return [name]
+        return fnmatch.filter(stages.keys(), name) if glob else [name]
 
     def load_all(
         self,
@@ -309,9 +306,7 @@ class StageLoad:
 
     @property
     def fs(self):
-        if self._fs:
-            return self._fs
-        return self.repo.fs
+        return self._fs if self._fs else self.repo.fs
 
     @property
     def graph(self) -> "DiGraph":
@@ -366,10 +361,7 @@ class StageLoad:
             return collect_inside_path(path, graph or self.graph)
 
         stages = self.from_target(target, accept_group=accept_group, glob=glob)
-        if not with_deps:
-            return stages
-
-        return _collect_with_deps(stages, graph or self.graph)
+        return _collect_with_deps(stages, graph or self.graph) if with_deps else stages
 
     def collect_granular(
         self,
@@ -405,12 +397,9 @@ class StageLoad:
         )
         if not stages:
             if not (recursive and self.fs.isdir(target)):
-                try:
+                with suppress(OutputNotFoundError):
                     (out,) = self.repo.find_outs_by_path(target, strict=False)
                     return [StageInfo(out.stage, os.path.abspath(target))]
-                except OutputNotFoundError:
-                    pass
-
             from dvc.dvcfile import is_valid_filename
             from dvc.stage.exceptions import (
                 StageFileDoesNotExistError,

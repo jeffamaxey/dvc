@@ -39,8 +39,8 @@ def _fs_copy(src, dst, ignore=None):
 @pytest.fixture(scope="session")
 def make_tmp_dir(tmp_path_factory, request, worker_id):
     def make(
-        name, *, scm=False, dvc=False, subdir=False
-    ):  # pylint: disable=W0621
+            name, *, scm=False, dvc=False, subdir=False
+        ):  # pylint: disable=W0621
         from shutil import ignore_patterns
 
         from scmrepo.git import Git
@@ -51,7 +51,7 @@ def make_tmp_dir(tmp_path_factory, request, worker_id):
 
         cache = CACHE.get((scm, dvc, subdir))
         if not cache:
-            cache = tmp_path_factory.mktemp("dvc-test-cache" + worker_id)
+            cache = tmp_path_factory.mktemp(f"dvc-test-cache{worker_id}")
             TmpDir(cache).init(scm=scm, dvc=dvc, subdir=subdir)
             CACHE[(scm, dvc, subdir)] = os.fspath(cache)
         path = tmp_path_factory.mktemp(name) if isinstance(name, str) else name

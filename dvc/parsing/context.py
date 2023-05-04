@@ -113,7 +113,7 @@ class Meta:
 
     def __str__(self):
         string = self.source or "<local>"
-        string += ":" + self.path()
+        string += f":{self.path()}"
         return string
 
     def path(self):
@@ -390,8 +390,7 @@ class Context(CtxDict):
         return ctx
 
     def merge_update(self, other: "Context", overwrite=False):
-        matches = select(lambda key: key in other, self._reserved_keys.keys())
-        if matches:
+        if matches := select(lambda key: key in other, self._reserved_keys.keys()):
             raise ReservedKeyError(matches)
         return super().merge_update(other, overwrite=overwrite)
 

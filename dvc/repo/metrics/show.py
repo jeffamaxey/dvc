@@ -26,8 +26,7 @@ def _to_fs_paths(metrics: List[Output]) -> StrPaths:
         if out.metric:
             result.append(out.fs_path)
         elif out.live:
-            fs_path = summary_fs_path(out)
-            if fs_path:
+            if fs_path := summary_fs_path(out):
                 result.append(fs_path)
     return result
 
@@ -78,16 +77,13 @@ def _read_metric(path, fs, rev, **kwargs):
 def _read_metrics(repo, metrics, rev, onerror=None):
     fs = RepoFileSystem(repo)
 
-    res = {}
-    for metric in metrics:
-        if not fs.isfile(metric):
-            continue
-
-        res[fs.path.relpath(metric, os.getcwd())] = _read_metric(
+    return {
+        fs.path.relpath(metric, os.getcwd()): _read_metric(
             metric, fs, rev, onerror=onerror
         )
-
-    return res
+        for metric in metrics
+        if fs.isfile(metric)
+    }
 
 
 def _gather_metrics(repo, targets, rev, recursive, onerror=None):
@@ -109,17 +105,17 @@ def show(
     if onerror is None:
         onerror = onerror_collect
 
-    res = {}
-    for rev in repo.brancher(
-        revs=revs,
-        all_branches=all_branches,
-        all_tags=all_tags,
-        all_commits=all_commits,
-    ):
-        res[rev] = error_handler(_gather_metrics)(
+    res = {
+        rev: error_handler(_gather_metrics)(
             repo, targets, rev, recursive, onerror=onerror
         )
-
+        for rev in repo.brancher(
+            revs=revs,
+            all_branches=all_branches,
+            all_tags=all_tags,
+            all_commits=all_commits,
+        )
+    }
     # Hide workspace metrics if they are the same as in the active branch
     try:
         active_branch = repo.scm.active_branch()
@@ -131,8 +127,7 @@ def show(
         if res.get("workspace") == res.get(active_branch):
             res.pop("workspace", None)
 
-    errored = errored_revisions(res)
-    if errored:
+    if errored := errored_revisions(res):
         from dvc.ui import ui
 
         ui.error_write(

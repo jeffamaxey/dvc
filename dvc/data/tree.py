@@ -61,7 +61,7 @@ class Tree(HashFile):
         from dvc.utils import tmp_fname
 
         memfs = MemoryFileSystem()
-        fs_path = "memory://{}".format(tmp_fname(""))
+        fs_path = f'memory://{tmp_fname("")}'
         with memfs.open(fs_path, "wb") as fobj:
             fobj.write(self.as_bytes())
         self.fs = memfs
@@ -85,8 +85,7 @@ class Tree(HashFile):
         kwargs = {}
         if prefix:
             kwargs = {"prefix": prefix}
-            item = self._trie.longest_prefix(prefix)
-            if item:
+            if item := self._trie.longest_prefix(prefix):
                 key, (meta, hash_info) = item
                 self._load(key, meta, hash_info)
 

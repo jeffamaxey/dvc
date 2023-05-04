@@ -176,7 +176,7 @@ def test_discard_remove(dvc):
     with pytest.raises(ValueError):
         index.remove(Stage(dvc, "path2"))
     assert index.stages == [stage]
-    assert list(index.remove(stage)) == []
+    assert not list(index.remove(stage))
 
 
 def test_difference(dvc):

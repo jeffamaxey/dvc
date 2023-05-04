@@ -39,8 +39,7 @@ def get_fs_cls(remote_conf, scheme=None):
 
 
 def get_fs_config(repo, config, **kwargs):
-    name = kwargs.get("name")
-    if name:
+    if name := kwargs.get("name"):
         try:
             remote_conf = config["remote"][name.lower()]
         except KeyError:
@@ -99,13 +98,11 @@ def get_cloud_fs(repo, **kwargs):
         raise ConfigError(str(exc)) from None
 
     if "jobs" not in remote_conf:
-        jobs = core_config.get("jobs")
-        if jobs:
+        if jobs := core_config.get("jobs"):
             remote_conf["jobs"] = jobs
 
     if "checksum_jobs" not in remote_conf:
-        checksum_jobs = core_config.get("checksum_jobs")
-        if checksum_jobs:
+        if checksum_jobs := core_config.get("checksum_jobs"):
             remote_conf["checksum_jobs"] = checksum_jobs
 
     cls = get_fs_cls(remote_conf)

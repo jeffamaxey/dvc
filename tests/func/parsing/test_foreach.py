@@ -74,7 +74,7 @@ def test_foreach_interpolated_simple_list(tmp_dir, dvc):
         "build@baz": {"cmd": "echo baz"},
     }
     assert resolver.context == {"models": foreach_data}
-    assert not any(item for item in resolver.tracked_vars.values())
+    assert not any(resolver.tracked_vars.values())
 
 
 @pytest.mark.parametrize("foreach_def", ["${item.thresh}", "${item[thresh]}"])
@@ -104,7 +104,7 @@ def test_foreach_interpolate_with_composite_data(
 
     assert definition.resolve_all() == result
     assert resolver.context == {"models": foreach_data}
-    assert not any(item for item in resolver.tracked_vars.values())
+    assert not any(resolver.tracked_vars.values())
 
 
 def test_params_file_with_dict_tracked(tmp_dir, dvc):
@@ -159,7 +159,7 @@ def test_foreach_data_from_nested_vars(tmp_dir, dvc):
         "build@1": {"cmd": "echo 15"},
     }
     assert resolver.context == vars_
-    assert not any(item for item in resolver.tracked_vars.values())
+    assert not any(resolver.tracked_vars.values())
 
 
 def test_foreach_partial_interpolations(tmp_dir, dvc):
@@ -173,7 +173,7 @@ def test_foreach_partial_interpolations(tmp_dir, dvc):
         "build@model2": {"cmd": "echo bar"},
     }
     assert resolver.context == {"bar": "bar"}
-    assert not any(item for item in resolver.tracked_vars.values())
+    assert not any(resolver.tracked_vars.values())
 
 
 def test_mixed_vars_for_foreach_data(tmp_dir, dvc):
@@ -254,7 +254,7 @@ def test_foreach_with_interpolated_wdir(tmp_dir, dvc):
     }
 
     assert not resolver.context
-    assert not any(item for item in resolver.tracked_vars.values())
+    assert not any(resolver.tracked_vars.values())
 
 
 def test_foreach_with_local_vars(tmp_dir, dvc):
@@ -277,7 +277,7 @@ def test_foreach_with_local_vars(tmp_dir, dvc):
         "build@bar": {"cmd": "echo bar foobar"},
     }
     assert not resolver.context
-    assert not any(item for item in resolver.tracked_vars.values())
+    assert not any(resolver.tracked_vars.values())
 
 
 @pytest.mark.parametrize(
@@ -325,7 +325,7 @@ def test_foreach_with_interpolated_wdir_and_local_vars(
     (tmp_dir / "params.yaml").dump({"models": {"model1": {"thresh": "foo"}}})
 
     for i in range(5):
-        build_dir = tmp_dir / ("model-" + str(i))
+        build_dir = tmp_dir / f"model-{str(i)}"
         build_dir.mkdir()
         (build_dir / "params.yaml").dump(
             {"train": {"epochs": 1 + i}, "prepare": {"nums": 10 * i}},

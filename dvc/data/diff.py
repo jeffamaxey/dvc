@@ -24,10 +24,7 @@ class TreeEntry:
         if not isinstance(other, TreeEntry):
             return False
 
-        if self.key != other.key:
-            return False
-
-        return self.oid == other.oid
+        return False if self.key != other.key else self.oid == other.oid
 
 
 @dataclass
@@ -43,13 +40,10 @@ class Change:
         if self.old and not self.new:
             return DELETE
 
-        if not self.old and self.new:
+        if not self.old:
             return ADD
 
-        if self.old != self.new:
-            return MODIFY
-
-        return UNCHANGED
+        return MODIFY if self.old != self.new else UNCHANGED
 
     def __bool__(self):
         return self.typ != UNCHANGED
@@ -78,10 +72,11 @@ def diff(
         return DiffResult()
 
     def _get_keys(obj):
-        if not obj:
-            return []
-        return [ROOT] + (
-            [key for key, _, _ in obj] if isinstance(obj, Tree) else []
+        return (
+            [ROOT]
+            + ([key for key, _, _ in obj] if isinstance(obj, Tree) else [])
+            if obj
+            else []
         )
 
     old_keys = set(_get_keys(old))

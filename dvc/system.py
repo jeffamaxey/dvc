@@ -31,11 +31,7 @@ class System:
         #
         # See https://bugs.python.org/issue41355 for more info.
         st = os.lstat(source)
-        if stat.S_ISLNK(st.st_mode):
-            src = realpath(source)
-        else:
-            src = source
-
+        src = realpath(source) if stat.S_ISLNK(st.st_mode) else source
         os.link(src, link_name)
 
     @staticmethod

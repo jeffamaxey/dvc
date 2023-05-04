@@ -125,8 +125,7 @@ class Experiments:
         revs = {}
         for i, entry in enumerate(self.stash):
             msg = entry.message.decode("utf-8").strip()
-            m = self.STASH_EXPERIMENT_RE.match(msg)
-            if m:
+            if m := self.STASH_EXPERIMENT_RE.match(msg):
                 revs[entry.new_sha.decode("utf-8")] = ExpStashEntry(
                     i,
                     m.group("rev"),
@@ -231,9 +230,7 @@ class Experiments:
                                         f"... ({len(names) - 3} more)"
                                     ]
                                 msg.append(
-                                    "To resume an experiment containing this "
-                                    "checkpoint, apply one of these heads:\n"
-                                    "\t{}".format(", ".join(names))
+                                    f'To resume an experiment containing this checkpoint, apply one of these heads:\n\t{", ".join(names)}'
                                 )
                             raise DvcException("".join(msg))
                         else:
@@ -285,10 +282,7 @@ class Experiments:
         return stash_rev
 
     def _stash_commit_deps(self, *args, **kwargs):
-        if len(args):
-            targets = args[0]
-        else:
-            targets = kwargs.get("targets")
+        targets = args[0] if len(args) else kwargs.get("targets")
         if isinstance(targets, str):
             targets = [targets]
         elif not targets:
@@ -315,9 +309,7 @@ class Experiments:
         msg = self.STASH_EXPERIMENT_FORMAT.format(
             rev=rev, baseline_rev=baseline_rev, name=name if name else ""
         )
-        if branch:
-            return f"{msg}:{branch}"
-        return msg
+        return f"{msg}:{branch}" if branch else msg
 
     def _pack_args(self, *args, **kwargs):
         import pickle
@@ -429,7 +421,7 @@ class Experiments:
                 "Queued experiment '%s' for future execution.", stash_rev[:7]
             )
             return [stash_rev]
-        if tmp_dir or queue:
+        if tmp_dir:
             manager_cls: Type = TempDirExecutorManager
         elif machine:
             manager_cls = SSHExecutorManager
@@ -449,9 +441,7 @@ class Experiments:
     def _workspace_resume_rev(self) -> Optional[str]:
         last_checkpoint = self._get_last_checkpoint()
         last_applied = self._get_last_applied()
-        if last_checkpoint and last_applied:
-            return last_applied
-        return None
+        return last_applied if last_checkpoint and last_applied else None
 
     def reproduce_queued(self, **kwargs):
         results = self._reproduce_revs(**kwargs)
@@ -641,7 +631,7 @@ class Experiments:
         )
         try:
             exec_results = {}
-            exec_results.update(self._executors_repro(manager, **kwargs))
+            exec_results |= self._executors_repro(manager, **kwargs)
         finally:
             # only drop successfully run stashed experiments
             to_drop: List[int] = [
@@ -656,8 +646,8 @@ class Experiments:
                 self.stash.drop(index)
 
         result: Dict[str, str] = {}
-        for _, exp_result in exec_results.items():
-            result.update(exp_result)
+        for exp_result in exec_results.values():
+            result |= exp_result
         return result
 
     @unlocked_repo
@@ -681,9 +671,7 @@ class Experiments:
 
         exp_baseline = self._get_baseline(exp_rev)
         if exp_baseline is None:
-            # if we can't tell from branch name, fall back to parent commit
-            exp_commit = self.scm.resolve_commit(exp_rev)
-            if exp_commit:
+            if exp_commit := self.scm.resolve_commit(exp_rev):
                 exp_baseline = first(exp_commit.parents)
         if exp_baseline == baseline_sha:
             return exp_baseline
@@ -700,13 +688,8 @@ class Experiments:
         rev = resolve_rev(self.scm, rev)
 
         if rev in self.stash_revs:
-            entry = self.stash_revs.get(rev)
-            if entry:
-                return entry.baseline_rev
-            return None
-
-        ref_info = first(exp_refs_by_rev(self.scm, rev))
-        if ref_info:
+            return entry.baseline_rev if (entry := self.stash_revs.get(rev)) else None
+        if ref_info := first(exp_refs_by_rev(self.scm, rev)):
             return ref_info.baseline_sha
         return None
 
@@ -730,17 +713,13 @@ class Experiments:
         Prefers tags, branches (heads), experiments in that orer.
         """
         exclude = f"{EXEC_NAMESPACE}/*"
-        ref = self.scm.describe(rev, base=EXPS_NAMESPACE, exclude=exclude)
-        if ref:
+        if ref := self.scm.describe(rev, base=EXPS_NAMESPACE, exclude=exclude):
             try:
-                name = ExpRefInfo.from_ref(ref).name
-                if name:
+                if name := ExpRefInfo.from_ref(ref).name:
                     return name
             except InvalidExpRefError:
                 pass
-        if rev in self.stash_revs:
-            return self.stash_revs[rev].name
-        return None
+        return self.stash_revs[rev].name if rev in self.stash_revs else None
 
     def get_running_exps(self) -> Dict[str, int]:
         """Return info for running experiments."""

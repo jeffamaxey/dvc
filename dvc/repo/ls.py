@@ -50,7 +50,7 @@ def _ls(repo, fs_path, recursive=None, dvc_only=False):
     fs = repo.repo_fs
     infos = []
     for root, dirs, files in fs.walk(fs_path, dvcfiles=True):
-        entries = chain(files, dirs) if not recursive else files
+        entries = files if recursive else chain(files, dirs)
         infos.extend(fs.path.join(root, entry) for entry in entries)
         if not recursive:
             break

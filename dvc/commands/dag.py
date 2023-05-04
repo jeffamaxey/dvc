@@ -11,10 +11,7 @@ def _show_ascii(G):
 
     pipelines = get_pipelines(G)
 
-    ret = []
-    for pipeline in pipelines:
-        ret.append(draw(pipeline.nodes, pipeline.edges))
-
+    ret = [draw(pipeline.nodes, pipeline.edges) for pipeline in pipelines]
     return "\n".join(ret)
 
 

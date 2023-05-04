@@ -132,7 +132,7 @@ class Repo:
         db_dir = os.path.join(
             base_db_dir,
             self.DVC_DIR,
-            f"{os.path.basename(self.root_dir)}-{root_dir_hash[0:7]}",
+            f"{os.path.basename(self.root_dir)}-{root_dir_hash[:7]}",
         )
 
         makedirs(db_dir, exist_ok=True)
@@ -457,10 +457,7 @@ class Repo:
             if out.scheme == "local" and match(fs_path, out.fs_path):
                 return True
 
-            if recursive and out.fs.path.isin(out.fs_path, fs_path):
-                return True
-
-            return False
+            return bool(recursive and out.fs.path.isin(out.fs_path, fs_path))
 
         matched = list(filter(func, outs))
         if not matched:

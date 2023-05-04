@@ -66,11 +66,7 @@ def test_show_non_plot(tmp_dir, scm, use_dvc):
     metric = [{"first_val": 100, "val": 2}, {"first_val": 200, "val": 3}]
     (tmp_dir / "metric.json").dump_json(metric, sort_keys=True)
 
-    if use_dvc:
-        dvc = Repo.init()
-    else:
-        dvc = Repo(uninitialized=True)
-
+    dvc = Repo.init() if use_dvc else Repo(uninitialized=True)
     plots = dvc.plots.show(targets=["metric.json"])
 
     assert plots["workspace"]["data"]["metric.json"]["data"] == metric

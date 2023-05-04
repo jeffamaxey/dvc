@@ -35,10 +35,9 @@ def _collect_experiment_commit(
             commit = repo.scm.resolve_commit(rev)
             res["timestamp"] = datetime.fromtimestamp(commit.commit_time)
 
-        params = _gather_params(
+        if params := _gather_params(
             repo, rev=rev, targets=None, deps=param_deps, onerror=onerror
-        )
-        if params:
+        ):
             res["params"] = params
 
         res["deps"] = {
@@ -110,7 +109,7 @@ def _collect_experiment_branch(
                 res[rev]["data"].update(exp)
                 res.move_to_end(rev)
             else:
-                exp.update(collected_exp["data"])
+                exp |= collected_exp["data"]
         else:
             exp = collected_exp["data"]
         if rev not in res:
@@ -145,8 +144,8 @@ def show(
         revs = [revs]
 
     found_revs: Dict[str, List[str]] = {"workspace": []}
-    found_revs.update(
-        iter_revs(repo.scm, revs, num, all_branches, all_tags, all_commits)
+    found_revs |= iter_revs(
+        repo.scm, revs, num, all_branches, all_tags, all_commits
     )
 
     running = repo.experiments.get_running_exps()
@@ -186,18 +185,17 @@ def show(
             )
         # collect queued (not yet reproduced) experiments
         for stash_rev, entry in repo.experiments.stash_revs.items():
-            if entry.baseline_rev in found_revs:
-                if stash_rev not in running or not running[stash_rev].get(
-                    "last"
-                ):
-                    experiment = _collect_experiment_commit(
-                        repo,
-                        stash_rev,
-                        sha_only=sha_only,
-                        stash=stash_rev not in running,
-                        param_deps=param_deps,
-                        running=running,
-                        onerror=onerror,
-                    )
-                    res[entry.baseline_rev][stash_rev] = experiment
+            if entry.baseline_rev in found_revs and (
+                stash_rev not in running or not running[stash_rev].get("last")
+            ):
+                experiment = _collect_experiment_commit(
+                    repo,
+                    stash_rev,
+                    sha_only=sha_only,
+                    stash=stash_rev not in running,
+                    param_deps=param_deps,
+                    running=running,
+                    onerror=onerror,
+                )
+                res[entry.baseline_rev][stash_rev] = experiment
     return res

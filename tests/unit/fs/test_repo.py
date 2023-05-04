@@ -205,9 +205,7 @@ def test_walk(tmp_dir, dvc, dvcfiles, extra_expected):
 
     actual = []
     for root, dirs, files in fs.walk("dir", dvcfiles=dvcfiles):
-        for entry in dirs + files:
-            actual.append(os.path.join(root, entry))
-
+        actual.extend(os.path.join(root, entry) for entry in dirs + files)
     expected += extra_expected
     assert set(actual) == set(expected)
     assert len(actual) == len(expected)
@@ -240,9 +238,7 @@ def test_walk_dirty(tmp_dir, dvc):
 
     actual = []
     for root, dirs, files in fs.walk("dir"):
-        for entry in dirs + files:
-            actual.append(os.path.join(root, entry))
-
+        actual.extend(os.path.join(root, entry) for entry in dirs + files)
     assert set(actual) == set(expected)
     assert len(actual) == len(expected)
 
@@ -257,9 +253,7 @@ def test_walk_dirty_cached_dir(tmp_dir, scm, dvc):
 
     actual = []
     for root, dirs, files in fs.walk(data):
-        for entry in dirs + files:
-            actual.append(os.path.join(root, entry))
-
+        actual.extend(os.path.join(root, entry) for entry in dirs + files)
     assert actual == [(data / "bar").fs_path]
 
 
@@ -284,9 +278,7 @@ def test_walk_mixed_dir(tmp_dir, scm, dvc):
     ]
     actual = []
     for root, dirs, files in fs.walk("dir"):
-        for entry in dirs + files:
-            actual.append(os.path.join(root, entry))
-
+        actual.extend(os.path.join(root, entry) for entry in dirs + files)
     assert set(actual) == set(expected)
     assert len(actual) == len(expected)
 
@@ -448,9 +440,7 @@ def test_subrepo_walk(tmp_dir, scm, dvc, dvcfiles, extra_expected):
         dvcfiles=dvcfiles,
         ignore_subrepos=False,
     ):
-        for entry in dirs + files:
-            actual.append(os.path.join(root, entry))
-
+        actual.extend(os.path.join(root, entry) for entry in dirs + files)
     expected = [
         os.path.join(fs.root_dir, path) for path in expected + extra_expected
     ]
@@ -485,9 +475,10 @@ def test_repo_fs_no_subrepos(tmp_dir, dvc, scm):
 
     actual = []
     for root, dirs, files in fs.walk(tmp_dir.fs_path, dvcfiles=True):
-        for entry in dirs + files:
-            actual.append(os.path.normpath(os.path.join(root, entry)))
-
+        actual.extend(
+            os.path.normpath(os.path.join(root, entry))
+            for entry in dirs + files
+        )
     expected = [str(path) for path in expected]
     assert set(actual) == set(expected)
     assert len(actual) == len(expected)

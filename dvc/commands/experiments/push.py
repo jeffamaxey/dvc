@@ -24,7 +24,7 @@ class CmdExperimentsPush(CmdBase):
 
         self.raise_error_if_all_disabled()
 
-        pushed_exps = self.repo.experiments.push(
+        if pushed_exps := self.repo.experiments.push(
             self.args.git_remote,
             self.args.experiment,
             all_commits=self.args.all_commits,
@@ -35,9 +35,7 @@ class CmdExperimentsPush(CmdBase):
             dvc_remote=self.args.dvc_remote,
             jobs=self.args.jobs,
             run_cache=self.args.run_cache,
-        )
-
-        if pushed_exps:
+        ):
             ui.write(
                 f"Pushed experiment '{pushed_exps}'"
                 f"to Git remote '{self.args.git_remote}'."

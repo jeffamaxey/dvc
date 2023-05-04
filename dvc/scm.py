@@ -91,7 +91,7 @@ class TqdmGit(Tqdm):
     def update_git(self, event: "GitProgressEvent") -> None:
         phase, completed, total, message, *_ = event
         if phase:
-            message = (phase + " | " + message) if message else phase
+            message = f"{phase} | {message}" if message else phase
         if message:
             self.postfix["info"] = f" {message} | "
         if completed:

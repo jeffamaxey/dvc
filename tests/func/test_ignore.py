@@ -19,8 +19,7 @@ def _to_pattern_info_list(str_list: List):
 
 
 def walk_files(dvc, *args):
-    for fs_path in dvc.dvcignore.find(*args):
-        yield fs_path
+    yield from dvc.dvcignore.find(*args)
 
 
 @pytest.mark.parametrize("filename", ["ignored", "тест"])
@@ -185,7 +184,7 @@ def test_ignore_subrepo(tmp_dir, scm, dvc):
     subrepo_dir = tmp_dir / "subdir"
 
     result = walk_files(dvc, dvc.fs, subrepo_dir)
-    assert set(result) == set()
+    assert not set(result)
 
     with subrepo_dir.chdir():
         subrepo = Repo.init(subdir=True)
@@ -402,7 +401,7 @@ def test_ignore_in_added_dir(tmp_dir, dvc):
 
     ignored_path = tmp_dir / "dir" / "sub" / "ignored"
     result = walk_files(dvc, dvc.fs, ignored_path)
-    assert set(result) == set()
+    assert not set(result)
     assert ignored_path.exists()
 
     dvc.add("dir")

@@ -40,12 +40,7 @@ class DataCloud:
             return self._init_odb(name)
 
         if bool(self.repo.config["remote"]):
-            error_msg = (
-                "no remote specified. Setup default remote with\n"
-                "    dvc remote default <remote name>\n"
-                "or use:\n"
-                "    dvc {} -r <remote name>".format(command)
-            )
+            error_msg = f"no remote specified. Setup default remote with\n    dvc remote default <remote name>\nor use:\n    dvc {command} -r <remote name>"
         else:
             error_msg = (
                 "no remote specified. Create a default remote with\n"

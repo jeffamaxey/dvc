@@ -57,18 +57,14 @@ class LocalObjectDB(ObjectDB):
         # NOTE: `self.cache_path` is already normalized so we can simply use
         # `os.sep` instead of `os.path.join`. This results in this helper
         # being ~5.5 times faster.
-        return f"{self.cache_path}{os.sep}{hash_[0:2]}{os.sep}{hash_[2:]}"
+        return f"{self.cache_path}{os.sep}{hash_[:2]}{os.sep}{hash_[2:]}"
 
     def hashes_exist(
         self, hashes, jobs=None, name=None
     ):  # pylint: disable=unused-argument
         ret = []
 
-        for hash_ in Tqdm(
-            hashes,
-            unit="file",
-            desc="Querying " + ("cache in " + name if name else "local cache"),
-        ):
+        for hash_ in Tqdm(hashes, unit="file", desc="Querying " + (f"cache in {name}" if name else "local cache")):
             hash_info = HashInfo(self.fs.PARAM_CHECKSUM, hash_)
             try:
                 self.check(hash_info)
@@ -102,7 +98,7 @@ class LocalObjectDB(ObjectDB):
     def _unprotect_file(self, path):
         if self.fs.is_symlink(path) or self.fs.is_hardlink(path):
             logger.debug("Unprotecting '%s'", path)
-            tmp = os.path.join(os.path.dirname(path), "." + uuid())
+            tmp = os.path.join(os.path.dirname(path), f".{uuid()}")
 
             # The operations order is important here - if some application
             # would access the file during the process of copyfile then it

@@ -41,8 +41,7 @@ class ImageConverter:
         Convert the DVC Plots content to DVC Render datapoints.
         Return both generated datapoints and updated properties.
         """
-        path = self.plot_properties.get("out")
-        if path:
+        if path := self.plot_properties.get("out"):
             if not os.path.isdir(path):
                 os.makedirs(path, exist_ok=True)
             src = self._write_image(

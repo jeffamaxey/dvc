@@ -58,8 +58,7 @@ class WorkspaceExecutorManager(BaseExecutorManager):
 
     def _collect_executor(self, repo, executor, exec_result) -> Dict[str, str]:
         results = {}
-        exp_rev = self.scm.get_ref(EXEC_BRANCH)
-        if exp_rev:
+        if exp_rev := self.scm.get_ref(EXEC_BRANCH):
             logger.debug("Collected experiment '%s'.", exp_rev[:7])
             results[exp_rev] = exec_result.exp_hash
         return results

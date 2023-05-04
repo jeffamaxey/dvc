@@ -27,10 +27,7 @@ class CmdGet(CmdBaseNoRepo):
         return 0
 
     def run(self):
-        if self.args.show_url:
-            return self._show_url()
-
-        return self._get_file_from_repo()
+        return self._show_url() if self.args.show_url else self._get_file_from_repo()
 
     def _get_file_from_repo(self):
         from dvc.repo import Repo
@@ -45,11 +42,7 @@ class CmdGet(CmdBaseNoRepo):
             )
             return 0
         except DvcException:
-            logger.exception(
-                "failed to get '{}' from '{}'".format(
-                    self.args.path, self.args.url
-                )
-            )
+            logger.exception(f"failed to get '{self.args.path}' from '{self.args.url}'")
             return 1
 
 

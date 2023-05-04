@@ -94,7 +94,7 @@ def test_cloud_cli(tmp_dir, dvc, remote, mocker):
         _kwargs["jobs"] == 2
         for (_args, _kwargs) in hashes_exist.call_args_list
     )
-    shutil.move(dvc.odb.local.cache_dir, dvc.odb.local.cache_dir + ".back")
+    shutil.move(dvc.odb.local.cache_dir, f"{dvc.odb.local.cache_dir}.back")
 
     assert main(["fetch"] + args) == 0
 
@@ -552,7 +552,7 @@ def test_target_remote(tmp_dir, dvc, make_remote):
     default = dvc.cloud.get_remote_odb("default")
     myremote = dvc.cloud.get_remote_odb("myremote")
 
-    assert set(default.all()) == set()
+    assert not set(default.all())
     assert set(myremote.all()) == {
         "acbd18db4cc2f85cedef654fccc4a4d8",
         "f97c5d29941bfb1b2fdab0874906ab82",

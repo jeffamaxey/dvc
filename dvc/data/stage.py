@@ -119,10 +119,7 @@ def _build_objects(
     no_progress_bar=False,
     **kwargs,
 ):
-    if dvcignore:
-        walk_iterator = dvcignore.find(fs, fs_path)
-    else:
-        walk_iterator = fs.find(fs_path)
+    walk_iterator = dvcignore.find(fs, fs_path) if dvcignore else fs.find(fs_path)
     with Tqdm(
         unit="md5",
         desc="Computing file/dir hashes (only done once)",

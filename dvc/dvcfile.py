@@ -31,9 +31,7 @@ PIPELINE_LOCK = "dvc.lock"
 class FileIsGitIgnored(DvcException):
     def __init__(self, path, pipeline_file=False):
         super().__init__(
-            "{}'{}' is git-ignored.".format(
-                "bad DVC file name " if pipeline_file else "", path
-            )
+            f"""{"bad DVC file name " if pipeline_file else ""}'{path}' is git-ignored."""
         )
 
 
@@ -73,10 +71,7 @@ def is_git_ignored(repo, path):
 def check_dvcfile_path(repo, path):
     if not is_valid_filename(path):
         raise StageFileBadNameError(
-            "bad DVC file name '{}'. DVC files should be named "
-            "'{}' or have a '.dvc' suffix (e.g. '{}.dvc').".format(
-                relpath(path), PIPELINE_FILE, os.path.basename(path)
-            )
+            f"bad DVC file name '{relpath(path)}'. DVC files should be named '{PIPELINE_FILE}' or have a '.dvc' suffix (e.g. '{os.path.basename(path)}.dvc')."
         )
 
     if is_git_ignored(repo, path):
@@ -92,9 +87,7 @@ class FileMixin:
         self.verify = verify
 
     def __repr__(self):
-        return "{}: {}".format(
-            self.__class__.__name__, relpath(self.path, self.repo.root_dir)
-        )
+        return f"{self.__class__.__name__}: {relpath(self.path, self.repo.root_dir)}"
 
     def __hash__(self):
         return hash(self.path)
@@ -221,7 +214,7 @@ class PipelineFile(FileMixin):
 
     @property
     def _lockfile(self):
-        return Lockfile(self.repo, os.path.splitext(self.path)[0] + ".lock")
+        return Lockfile(self.repo, f"{os.path.splitext(self.path)[0]}.lock")
 
     def dump(
         self, stage, update_pipeline=True, update_lock=True, **kwargs
@@ -327,7 +320,7 @@ def get_lockfile_schema(d):
 
 
 def migrate_lock_v1_to_v2(d, version_info):
-    stages = {k: v for k, v in d.items()}
+    stages = dict(d.items())
 
     for key in stages:
         d.pop(key)
@@ -372,11 +365,10 @@ class Lockfile(FileMixin):
                     "Migrating lock file '%s' from v1 to v2", self.relpath
                 )
                 migrate_lock_v1_to_v2(data, self.latest_version_info)
-            else:
-                if not data:
-                    data.update(self.latest_version_info)
-                    # order is important, meta should always be at the top
-                    logger.info("Generating lock file '%s'", self.relpath)
+            elif not data:
+                data.update(self.latest_version_info)
+                # order is important, meta should always be at the top
+                logger.info("Generating lock file '%s'", self.relpath)
 
             data["stages"] = data.get("stages", {})
             modified = data["stages"].get(stage.name, {}) != stage_data.get(

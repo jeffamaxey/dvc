@@ -331,18 +331,10 @@ class Output:
             return fs_path
 
         parsed = urlparse(self.def_path)
-        if parsed.scheme != "remote":
-            # NOTE: we can path either from command line or .dvc file,
-            # so we should expect both posix and windows style paths.
-            # paths accepts both, i.e. / works everywhere, \ only on win.
-            #
-            # FIXME: if we have Windows path containing / or posix one with \
-            # then we have #2059 bug and can't really handle that.
-            if self.stage and not os.path.isabs(fs_path):
-                fs_path = fs.path.join(self.stage.wdir, fs_path)
+        if parsed.scheme != "remote" and self.stage and not os.path.isabs(fs_path):
+            fs_path = fs.path.join(self.stage.wdir, fs_path)
 
-        abs_p = os.path.abspath(os.path.normpath(fs_path))
-        return abs_p
+        return os.path.abspath(os.path.normpath(fs_path))
 
     def __repr__(self):
         return "{class_name}: '{def_path}'".format(
@@ -387,10 +379,11 @@ class Output:
 
     @property
     def use_scm_ignore(self):
-        if not self.is_in_repo:
-            return False
-
-        return self.use_cache or self.stage.is_repo_import
+        return (
+            self.use_cache or self.stage.is_repo_import
+            if self.is_in_repo
+            else False
+        )
 
     @property
     def odb(self):
@@ -427,10 +420,11 @@ class Output:
         return self.hash_info.isdir
 
     def _is_path_dvcignore(self, path) -> bool:
-        if not self.IS_DEPENDENCY and self.dvcignore:
-            if self.dvcignore.is_ignored(self.fs, path, ignore_subrepos=False):
-                return True
-        return False
+        return bool(
+            not self.IS_DEPENDENCY
+            and self.dvcignore
+            and self.dvcignore.is_ignored(self.fs, path, ignore_subrepos=False)
+        )
 
     @property
     def exists(self):
@@ -463,10 +457,7 @@ class Output:
         if self.changed_checksum():
             return {str(self): "modified"}
 
-        if not self.hash_info:
-            return {str(self): "new"}
-
-        return {}
+        return {} if self.hash_info else {str(self): "new"}
 
     def status(self):
         if self.hash_info and self.use_cache and self.changed_cache():
@@ -481,9 +472,7 @@ class Output:
 
     @property
     def dvcignore(self):
-        if self.fs.scheme == "local":
-            return self.repo.dvcignore
-        return None
+        return self.repo.dvcignore if self.fs.scheme == "local" else None
 
     @property
     def is_empty(self):
@@ -571,12 +560,11 @@ class Output:
         assert self.hash_info
 
         if self.use_cache:
-            granular = (
+            if granular := (
                 self.is_dir_checksum
                 and filter_info
                 and filter_info != self.fs_path
-            )
-            if granular:
+            ):
                 obj = self._commit_granular_dir(filter_info)
             else:
                 staging, _, obj = ostage(
@@ -647,12 +635,11 @@ class Output:
         if not self.use_cache:
             ret[self.PARAM_CACHE] = self.use_cache
 
-        if isinstance(self.metric, dict):
-            if (
-                self.PARAM_METRIC_XPATH in self.metric
-                and not self.metric[self.PARAM_METRIC_XPATH]
-            ):
-                del self.metric[self.PARAM_METRIC_XPATH]
+        if isinstance(self.metric, dict) and (
+            self.PARAM_METRIC_XPATH in self.metric
+            and not self.metric[self.PARAM_METRIC_XPATH]
+        ):
+            del self.metric[self.PARAM_METRIC_XPATH]
 
         if self.metric:
             ret[self.PARAM_METRIC] = self.metric
@@ -884,8 +871,7 @@ class Output:
             )
             if not force and not prompt.confirm(msg.format(self.fs_path)):
                 raise CollectCacheError(
-                    "unable to fully collect used cache"
-                    " without cache for directory '{}'".format(self)
+                    f"unable to fully collect used cache without cache for directory '{self}'"
                 )
             return None
 
@@ -909,13 +895,7 @@ class Output:
             return self.get_used_external(**kwargs)
 
         if not self.hash_info:
-            msg = (
-                "Output '{}'({}) is missing version info. "
-                "Cache for it will not be collected. "
-                "Use `dvc repro` to get your pipeline up to date.".format(
-                    self, self.stage
-                )
-            )
+            msg = f"Output '{self}'({self.stage}) is missing version info. Cache for it will not be collected. Use `dvc repro` to get your pipeline up to date."
             if self.exists:
                 msg += (
                     "\n"

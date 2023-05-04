@@ -22,8 +22,7 @@ SCHEMA = Schema(
 class RWLockFileCorruptedError(DvcException):
     def __init__(self, path):
         super().__init__(
-            "Unable to read RWLock-file '{}'. JSON structure is "
-            "corrupted".format(relpath(path))
+            f"Unable to read RWLock-file '{relpath(path)}'. JSON structure is corrupted"
         )
 
 
@@ -52,9 +51,7 @@ def _edit_rwlock(lock_dir):
 
 
 def _infos_to_str(infos):
-    return "\n".join(
-        "  (PID {}): {}".format(info["pid"], info["cmd"]) for info in infos
-    )
+    return "\n".join(f'  (PID {info["pid"]}): {info["cmd"]}' for info in infos)
 
 
 def _check_blockers(lock, info, *, mode, waiters):

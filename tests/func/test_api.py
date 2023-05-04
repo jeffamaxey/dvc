@@ -89,9 +89,7 @@ def test_open_scm_controlled(tmp_dir, erepo_dir):
 def test_open_not_cached(dvc):
     metric_file = "metric.txt"
     metric_content = "0.6"
-    metric_code = "open('{}', 'w').write('{}')".format(
-        metric_file, metric_content
-    )
+    metric_code = f"open('{metric_file}', 'w').write('{metric_content}')"
     dvc.run(
         single_stage=True,
         metrics_no_cache=[metric_file],

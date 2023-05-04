@@ -221,7 +221,7 @@ def test_collect_granular_with_target(tmp_dir, dvc, stages):
 
     with (tmp_dir / dvc.DVC_DIR).chdir():
         assert dvc.stage.collect_granular(
-            relpath(tmp_dir / PIPELINE_FILE) + ":copy-bar-foobar"
+            f"{relpath(tmp_dir / PIPELINE_FILE)}:copy-bar-foobar"
         ) == [(stages["copy-bar-foobar"], None)]
 
     assert dvc.stage.collect_granular("foobar") == [

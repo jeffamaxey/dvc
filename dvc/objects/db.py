@@ -107,27 +107,22 @@ class ObjectDB:
 
         if verify is None:
             verify = self.verify
-        try:
+        with suppress(ObjectFormatError, FileNotFoundError):
             self.check(hash_info, check_hash=verify)
             return
-        except (ObjectFormatError, FileNotFoundError):
-            pass
-
         cache_fs_path = self.hash_to_path(hash_info.value)
         self._add_file(
             fs, fs_path, cache_fs_path, hash_info, hardlink=hardlink
         )
 
-        try:
+        with suppress(ObjectFormatError, FileNotFoundError):
             if verify:
                 self.check(hash_info, check_hash=True)
             self.protect(cache_fs_path)
             self.state.save(cache_fs_path, self.fs, hash_info)
-        except (ObjectFormatError, FileNotFoundError):
-            pass
 
     def hash_to_path(self, hash_):
-        return self.fs.path.join(self.fs_path, hash_[0:2], hash_[2:])
+        return self.fs.path.join(self.fs_path, hash_[:2], hash_[2:])
 
     def protect(self, fs_path):  # pylint: disable=unused-argument
         pass
@@ -213,14 +208,11 @@ class ObjectDB:
                 )
 
     def _hashes_with_limit(self, limit, prefix=None):
-        count = 0
-        for hash_ in self._list_hashes(prefix):
+        for count, hash_ in enumerate(self._list_hashes(prefix), start=1):
             yield hash_
-            count += 1
             if count > limit:
                 logger.debug(
-                    "`_list_hashes()` returned max '{}' hashes, "
-                    "skipping remaining results".format(limit)
+                    f"`_list_hashes()` returned max '{limit}' hashes, skipping remaining results"
                 )
                 return
 
@@ -239,11 +231,7 @@ class ObjectDB:
         """
         prefix = "0" * self.fs.TRAVERSE_PREFIX_LEN
         total_prefixes = pow(16, self.fs.TRAVERSE_PREFIX_LEN)
-        if hashes:
-            max_hashes = self._max_estimation_size(hashes)
-        else:
-            max_hashes = None
-
+        max_hashes = self._max_estimation_size(hashes) if hashes else None
         with Tqdm(
             desc="Estimating size of "
             + (f"cache in '{name}'" if name else "remote cache"),
@@ -329,9 +317,7 @@ class ObjectDB:
         (except for small remotes) and a progress bar will be displayed.
         """
         logger.debug(
-            "Fetching all hashes from '{}'".format(
-                name if name else "remote cache"
-            )
+            f"""Fetching all hashes from '{name if name else "remote cache"}'"""
         )
 
         if not self.fs.CAN_TRAVERSE:
@@ -350,12 +336,7 @@ class ObjectDB:
         Hashes will be queried individually.
         """
         logger.debug(f"Querying {len(hashes)} hashes via object_exists")
-        with Tqdm(
-            desc="Querying "
-            + ("cache in " + name if name else "remote cache"),
-            total=len(hashes),
-            unit="file",
-        ) as pbar:
+        with Tqdm(desc=("Querying " + (f"cache in {name}" if name else "remote cache")), total=len(hashes), unit="file") as pbar:
 
             def exists_with_progress(fs_path):
                 ret = self.fs.exists(fs_path)
@@ -416,9 +397,7 @@ class ObjectDB:
         if (
             len(hashes) == 1 or not self.fs.CAN_TRAVERSE
         ) and not always_traverse:
-            remote_hashes = self.list_hashes_exists(hashes, jobs, name)
-            return remote_hashes
-
+            return self.list_hashes_exists(hashes, jobs, name)
         # Max remote size allowed for us to use traverse method
         remote_size, remote_hashes = self._estimate_remote_size(hashes, name)
 
@@ -435,10 +414,7 @@ class ObjectDB:
             traverse_weight = traverse_pages
         if len(hashes) < traverse_weight and not always_traverse:
             logger.debug(
-                "Large remote ('{}' hashes < '{}' traverse weight), "
-                "using object_exists for remaining hashes".format(
-                    len(hashes), traverse_weight
-                )
+                f"Large remote ('{len(hashes)}' hashes < '{traverse_weight}' traverse weight), using object_exists for remaining hashes"
             )
             return list(hashes & remote_hashes) + self.list_hashes_exists(
                 hashes - remote_hashes, jobs, name

@@ -27,7 +27,7 @@ class FSSpecWrapper(FileSystem):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.fs_args = {"skip_instance_cache": True}
-        self.fs_args.update(self._prepare_credentials(**kwargs))
+        self.fs_args |= self._prepare_credentials(**kwargs)
 
     @staticmethod
     def _get_kwargs_from_urls(urlpath: str) -> "Dict[str, Any]":
@@ -247,9 +247,7 @@ class CallbackMixin:
         callback=DEFAULT_CALLBACK,
         **kwargs,
     ):
-        # pylint: disable=protected-access
-        total: int = self.getsize(from_info)
-        if total:
+        if total := self.getsize(from_info):
             callback.set_size(total)
 
         with self.open(from_info, "rb") as fobj, open(to_info, "wb") as fdest:

@@ -30,9 +30,7 @@ class OutputDuplicationError(DvcException):
         assert isinstance(output, str)
         assert all(hasattr(stage, "relpath") for stage in stages)
         if len(stages) == 1:
-            msg = "output '{}' is already specified in {}.".format(
-                output, first(stages)
-            )
+            msg = f"output '{output}' is already specified in {first(stages)}."
         else:
             msg = "output '{}' is already specified in stages:\n{}".format(
                 output, "\n".join(f"\t- {s.addressing}" for s in stages)
@@ -132,17 +130,14 @@ class NotDvcRepoError(DvcException):
 class CyclicGraphError(DvcException):
     def __init__(self, stages):
         assert isinstance(stages, list)
-        msg = "Pipeline has a cycle involving: {}.".format(
-            ", ".join(s.addressing for s in stages)
-        )
+        msg = f'Pipeline has a cycle involving: {", ".join(s.addressing for s in stages)}.'
         super().__init__(msg)
 
 
 class ConfirmRemoveError(DvcException):
     def __init__(self, path):
         super().__init__(
-            "unable to remove '{}' without a confirmation. Use "
-            "`-f` to force.".format(path)
+            f"unable to remove '{path}' without a confirmation. Use `-f` to force."
         )
 
 
@@ -188,8 +183,7 @@ class CheckoutErrorSuggestGit(DvcException):
 class ETagMismatchError(DvcException):
     def __init__(self, etag, cached_etag):
         super().__init__(
-            "ETag mismatch detected when copying file to cache! "
-            "(expected: '{}', actual: '{}')".format(etag, cached_etag)
+            f"ETag mismatch detected when copying file to cache! (expected: '{etag}', actual: '{cached_etag}')"
         )
 
 
@@ -205,8 +199,7 @@ class FileMissingError(DvcException):
 class DvcIgnoreInCollectedDirError(DvcException):
     def __init__(self, ignore_dirname):
         super().__init__(
-            ".dvcignore file should not be in collected dir path: "
-            "'{}'".format(ignore_dirname)
+            f".dvcignore file should not be in collected dir path: '{ignore_dirname}'"
         )
 
 
@@ -259,9 +252,7 @@ class NoOutputInExternalRepoError(DvcException):
         from dvc.utils import relpath
 
         super().__init__(
-            "Output '{}' not found in target repository '{}'".format(
-                relpath(path, external_repo_path), external_repo_url
-            )
+            f"Output '{relpath(path, external_repo_path)}' not found in target repository '{external_repo_url}'"
         )
 
 
@@ -281,7 +272,7 @@ class PathMissingError(DvcException):
     )
 
     def __init__(self, path, repo, dvc_only=False):
-        msg = self.default_msg if not dvc_only else self.default_msg_dvc_only
+        msg = self.default_msg_dvc_only if dvc_only else self.default_msg
         super().__init__(msg.format(path, repo))
         self.dvc_only = dvc_only
 
@@ -290,15 +281,7 @@ class RemoteCacheRequiredError(DvcException):
     def __init__(self, scheme, fs_path):
 
         super().__init__(
-            (
-                "Current operation was unsuccessful because '{}' requires "
-                "existing cache on '{}' remote. See {} for information on how "
-                "to set up remote cache."
-            ).format(
-                fs_path,
-                scheme,
-                format_link("https://man.dvc.org/config#cache"),
-            )
+            f"""Current operation was unsuccessful because '{fs_path}' requires existing cache on '{scheme}' remote. See {format_link("https://man.dvc.org/config#cache")} for information on how to set up remote cache."""
         )
 
 
@@ -331,9 +314,7 @@ class CacheLinkError(DvcException):
     )
 
     def __init__(self, fs_paths):
-        msg = "No possible cache link types for '{}'. {}".format(
-            ", ".join(fs_paths), self.SUPPORT_LINK
-        )
+        msg = f"""No possible cache link types for '{", ".join(fs_paths)}'. {self.SUPPORT_LINK}"""
         super().__init__(msg)
         self.fs_paths = fs_paths
 

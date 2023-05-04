@@ -43,8 +43,7 @@ class CmdMachineAdd(CmdMachineConfig):
         with self.config.edit(self.args.level) as conf:
             if self.args.name in conf["machine"] and not self.args.force:
                 raise ConfigError(
-                    "machine '{}' already exists. Use `-f|--force` to "
-                    "overwrite it.".format(self.args.name)
+                    f"machine '{self.args.name}' already exists. Use `-f|--force` to overwrite it."
                 )
 
             conf["machine"][self.args.name] = {"cloud": self.args.cloud}
@@ -103,8 +102,7 @@ class CmdMachineList(CmdMachineConfig):
                 conf = conf.get(self.args.name, {})
             self._hide_private(conf)
             prefix = self._config_file_prefix(True, self.config, level)
-            configs = list(self._format_config(conf, prefix))
-            if configs:
+            if configs := list(self._format_config(conf, prefix)):
                 ui.write("\n".join(configs))
 
     def _show_table(self):
@@ -162,11 +160,7 @@ class CmdMachineRename(CmdBase):
 
         all_config = self.config.load_config_to_level(None)
         if self.args.new in all_config.get("machine", {}):
-            raise ConfigError(
-                "Rename failed. Machine '{}' already exists.".format(
-                    self.args.new
-                )
-            )
+            raise ConfigError(f"Rename failed. Machine '{self.args.new}' already exists.")
         ui.write(f"Rename machine '{self.args.name}' to '{self.args.new}'.")
 
     def run(self):

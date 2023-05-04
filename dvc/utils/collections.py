@@ -75,9 +75,7 @@ def apply_diff(src, dest):
 def ensure_list(item: Union[Iterable[str], str, None]) -> List[str]:
     if item is None:
         return []
-    if isinstance(item, str):
-        return [item]
-    return list(item)
+    return [item] if isinstance(item, str) else list(item)
 
 
 _KT = TypeVar("_KT")
@@ -105,10 +103,9 @@ def merge_params(src: Dict, to_update: Dict, allow_new: bool = True) -> Dict:
     data = benedict(src)
 
     if not allow_new:
-        new_params = list(
+        if new_params := list(
             set(to_update.keys()) - set(data.keypaths(indexes=True))
-        )
-        if new_params:
+        ):
             raise NewParamsFound(new_params)
 
     data.merge(to_update, overwrite=True)
@@ -176,7 +173,6 @@ def nested_contains(dictionary: Dict, phrase: str) -> bool:
         if key == phrase and val:
             return True
 
-        if isinstance(val, dict):
-            if nested_contains(val, phrase):
-                return True
+        if isinstance(val, dict) and nested_contains(val, phrase):
+            return True
     return False

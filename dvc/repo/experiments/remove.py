@@ -137,12 +137,12 @@ def _get_queued_index_by_names(
 ) -> Mapping[str, Optional[int]]:
     from scmrepo.exceptions import RevError as InternalRevError
 
-    result = {}
     stash_revs = repo.experiments.stash_revs
-    for _, entry in stash_revs.items():
-        if entry.name in exp_name_set:
-            result[entry.name] = entry.stash_index
-
+    result = {
+        entry.name: entry.stash_index
+        for _, entry in stash_revs.items()
+        if entry.name in exp_name_set
+    }
     for exp_name in exp_name_set:
         if exp_name in result:
             continue

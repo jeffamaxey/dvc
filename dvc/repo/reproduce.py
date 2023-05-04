@@ -72,8 +72,7 @@ def _get_stage_files(stage: "Stage") -> typing.Iterator[str]:
         if out.live:
             from dvc.repo.live import summary_fs_path
 
-            summary = summary_fs_path(out)
-            if summary:
+            if summary := summary_fs_path(out):
                 yield summary
 
 
@@ -253,11 +252,7 @@ def _get_steps(G, stages, downstream, single_item):
 
     steps = []
     for stage in all_pipelines:
-        if stage not in steps:
-            # NOTE: order of steps still matters for single_item
-            if single_item and stage not in stages:
-                continue
-
+        if stage not in steps and (not single_item or stage in stages):
             steps.append(stage)
 
     return steps

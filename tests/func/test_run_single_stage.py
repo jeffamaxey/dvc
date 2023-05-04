@@ -37,7 +37,7 @@ from tests.basic_env import TestDvc, TestDvcGit
 
 class TestRun(TestDvc):
     def test(self):
-        cmd = "python {} {} {}".format(self.CODE, self.FOO, "out")
+        cmd = f"python {self.CODE} {self.FOO} out"
         deps = [self.FOO, self.CODE]
         outs = [os.path.join(self.dvc.root_dir, "out")]
         outs_no_cache = []
@@ -70,7 +70,7 @@ class TestRun(TestDvc):
                 deps=deps,
                 outs=outs,
                 outs_no_cache=outs_no_cache,
-                fname="duplicate" + fname,
+                fname=f"duplicate{fname}",
                 single_stage=True,
             )
 
@@ -105,7 +105,7 @@ class TestRunMissingDep(TestDvc):
 class TestRunNoExec(TestDvcGit):
     def test(self):
         self.dvc.run(
-            cmd="python {} {} {}".format(self.CODE, self.FOO, "out"),
+            cmd=f"python {self.CODE} {self.FOO} out",
             deps=[self.CODE, self.FOO],
             outs=["out"],
             no_exec=True,
@@ -616,7 +616,7 @@ class TestCmdRunWorkingDirectory(TestDvc):
         dname = "dir"
         os.mkdir(os.path.join(self._root_dir, dname))
         foo = os.path.join(dname, self.FOO)
-        fname = os.path.join(dname, "stage" + DVC_FILE_SUFFIX)
+        fname = os.path.join(dname, f"stage{DVC_FILE_SUFFIX}")
         stage = self.dvc.run(
             cmd=f"echo test > {foo}",
             outs=[foo],
@@ -723,7 +723,7 @@ class TestRunCommit(TestDvc):
         self.assertTrue(os.path.isfile(fname))
         self.assertFalse(os.path.exists(self.dvc.odb.local.cache_dir))
 
-        ret = main(["commit", fname + ".dvc"])
+        ret = main(["commit", f"{fname}.dvc"])
         self.assertEqual(ret, 0)
         self.assertTrue(os.path.isfile(fname))
         self.assertEqual(len(os.listdir(self.dvc.odb.local.cache_dir)), 1)

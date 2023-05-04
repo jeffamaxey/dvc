@@ -101,9 +101,7 @@ class RepoFileSystem(FileSystem):  # pylint:disable=abstract-method
 
     @property
     def repo_url(self):
-        if self._main_repo is None:
-            return None
-        return self._main_repo.url
+        return None if self._main_repo is None else self._main_repo.url
 
     @property
     def config(self):
@@ -139,14 +137,14 @@ class RepoFileSystem(FileSystem):  # pylint:disable=abstract-method
 
         cache_dir = config.get(cls.PARAM_CACHE_DIR)
         cache_config = (
-            {}
-            if not cache_dir
-            else {
+            {
                 "cache": {
                     "dir": cache_dir,
                     "type": config.get(cls.PARAM_CACHE_TYPES),
                 }
             }
+            if cache_dir
+            else {}
         )
         repo_kwargs: dict = {
             "rev": config.get(cls.PARAM_REV),
@@ -182,7 +180,7 @@ class RepoFileSystem(FileSystem):  # pylint:disable=abstract-method
         if not prefix:
             return None
 
-        parents = (parent for parent in self.path.parents(path))
+        parents = iter(self.path.parents(path))
         dirs = [path] + list(takewhile(lambda p: p != prefix, parents))
         dirs.reverse()
         self._update(dirs, starting_repo=repo)
@@ -284,13 +282,9 @@ class RepoFileSystem(FileSystem):  # pylint:disable=abstract-method
         if dvc_fs and dvc_fs.repo.dvcignore.is_ignored_dir(path):
             return False
 
-        try:
+        with suppress(OSError, ValueError):
             info = fs.info(path)
             return info["type"] == "directory"
-        except (OSError, ValueError):
-            # from CPython's os.path.isdir()
-            pass
-
         if not dvc_fs:
             return False
 
@@ -320,13 +314,9 @@ class RepoFileSystem(FileSystem):  # pylint:disable=abstract-method
         if dvc_fs and dvc_fs.repo.dvcignore.is_ignored_file(path):
             return False
 
-        try:
+        with suppress(OSError, ValueError):
             info = fs.info(path)
             return info["type"] == "file"
-        except (OSError, ValueError):
-            # from CPython's os.path.isfile()
-            pass
-
         if not dvc_fs:
             return False
 
@@ -376,11 +366,11 @@ class RepoFileSystem(FileSystem):  # pylint:disable=abstract-method
         dirs = shared + dvc_only + repo_only
 
         def _func(fname):
-            if dvcfiles:
-                return True
-
-            return not (
-                is_valid_filename(fname) or fname == DvcIgnore.DVCIGNORE_FILE
+            return (
+                True
+                if dvcfiles
+                else not is_valid_filename(fname)
+                and fname != DvcIgnore.DVCIGNORE_FILE
             )
 
         # merge file lists

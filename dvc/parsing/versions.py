@@ -9,9 +9,7 @@ META_KWD = "meta"
 
 def lockfile_version_schema(value):
     expected = [LOCKFILE_VERSION.V2.value]  # pylint: disable=no-member
-    msg = "invalid schema version {}, expected one of {}".format(
-        value, expected
-    )
+    msg = f"invalid schema version {value}, expected one of {expected}"
     return validators.Any(*expected, msg=msg)(value)
 
 
@@ -35,7 +33,6 @@ class LOCKFILE_VERSION(VersionEnum):
         if not data or not isinstance(data, Mapping):
             return cls(cls.V2)
 
-        version = data.get(SCHEMA_KWD)
-        if version:
+        if version := data.get(SCHEMA_KWD):
             return cls(version if version in cls.all_versions() else cls.V2)
         return cls(cls.V1)

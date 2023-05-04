@@ -28,7 +28,7 @@ class WebDAVFileSystem(FSSpecWrapper):  # pylint:disable=abstract-method
         self.fs_args.update(
             {
                 "base_url": config["url"],
-                "cert": cert_path if not key_path else (cert_path, key_path),
+                "cert": (cert_path, key_path) if key_path else cert_path,
                 "verify": config.get("ssl_verify", True),
                 "timeout": config.get("timeout", 30),
             }
@@ -64,10 +64,9 @@ class WebDAVFileSystem(FSSpecWrapper):  # pylint:disable=abstract-method
         password = config.get("password", None)
 
         headers = {}
-        token = config.get("token")
         auth = None
-        if token:
-            headers.update({"Authorization": f"Bearer {token}"})
+        if token := config.get("token"):
+            headers["Authorization"] = f"Bearer {token}"
         elif user:
             if not password and config.get("ask_password"):
                 password = ask_password(config["host"], user)

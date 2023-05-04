@@ -80,8 +80,7 @@ def init(root_dir=os.curdir, no_scm=False, force=False, subdir=False):
             config.files["repo"],
             dvcignore,
         ]
-        ignore_file = context.scm.ignore_file
-        if ignore_file:
+        if ignore_file := context.scm.ignore_file:
             files.extend([os.path.join(dvc_dir, ignore_file)])
         proj.scm_context.track_file(files)
 

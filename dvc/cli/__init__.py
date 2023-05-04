@@ -31,11 +31,10 @@ def parse_args(argv=None):
     from .parser import get_main_parser
 
     parser = get_main_parser()
-    args = parser.parse_args(argv)
-    return args
+    return parser.parse_args(argv)
 
 
-def main(argv=None):  # noqa: C901
+def main(argv=None):    # noqa: C901
     """Main entry point for dvc CLI.
 
     Args:
@@ -109,9 +108,7 @@ def main(argv=None):  # noqa: C901
             from dvc.utils import error_link
 
             logger.exception(
-                "too many open files, please visit "
-                "{} to see how to handle this "
-                "problem".format(error_link("many-files")),
+                f'too many open files, please visit {error_link("many-files")} to see how to handle this problem',
                 extra={"tb_only": True},
             )
         else:

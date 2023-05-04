@@ -27,10 +27,10 @@ def collect_and_send_report(args=None, return_code=None):
 
     # Include command execution information on the report only when available.
     if args and hasattr(args, "func"):
-        report.update({"cmd_class": args.func.__name__})
+        report["cmd_class"] = args.func.__name__
 
     if return_code is not None:
-        report.update({"cmd_return_code": return_code})
+        report["cmd_return_code"] = return_code
 
     with tempfile.NamedTemporaryFile(delete=False, mode="w") as fobj:
         json.dump(report, fobj)
@@ -50,7 +50,7 @@ def is_enabled():
             Config(validate=False).get("core", {}).get("analytics", "true")
         )
 
-    logger.debug("Analytics is {}abled.".format("en" if enabled else "dis"))
+    logger.debug(f'Analytics is {"en" if enabled else "dis"}abled.')
 
     return enabled
 

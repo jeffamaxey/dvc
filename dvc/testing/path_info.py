@@ -154,7 +154,7 @@ class URLInfo(_BasePath):
             self._path = path
         else:
             if path and path[0] != "/":
-                path = "/" + path
+                path = f"/{path}"
             self._spath = path
 
     @property
@@ -214,9 +214,9 @@ class URLInfo(_BasePath):
     def netloc(self):
         netloc = self.host
         if self.user:
-            netloc = self.user + "@" + netloc
+            netloc = f"{self.user}@{netloc}"
         if self.port and int(self.port) != self.DEFAULT_PORTS.get(self.scheme):
-            netloc += ":" + str(self.port)
+            netloc += f":{str(self.port)}"
         return netloc
 
     @property
@@ -295,14 +295,7 @@ class HTTPURLInfo(URLInfo):
 
         if netloc is not None:
             return cls(
-                "{}://{}{}{}{}{}".format(
-                    scheme,
-                    netloc,
-                    path,
-                    (";" + params) if params else "",
-                    ("?" + query) if query else "",
-                    ("#" + fragment) if fragment else "",
-                )
+                f'{scheme}://{netloc}{path}{f";{params}" if params else ""}{f"?{query}" if query else ""}{f"#{fragment}" if fragment else ""}'
             )
 
         obj = cls.__new__(cls)
@@ -322,14 +315,7 @@ class HTTPURLInfo(URLInfo):
 
     @cached_property
     def url(self):
-        return "{}://{}{}{}{}{}".format(
-            self.scheme,
-            self.netloc,
-            self._spath,
-            (";" + self.params) if self.params else "",
-            ("?" + self.query) if self.query else "",
-            ("#" + self.fragment) if self.fragment else "",
-        )
+        return f'{self.scheme}://{self.netloc}{self._spath}{f";{self.params}" if self.params else ""}{f"?{self.query}" if self.query else ""}{f"#{self.fragment}" if self.fragment else ""}'
 
     def __eq__(self, other):
         if isinstance(other, (str, bytes)):
@@ -345,6 +331,4 @@ class HTTPURLInfo(URLInfo):
 class WebDAVURLInfo(URLInfo):
     @cached_property
     def url(self):
-        return "{}://{}{}".format(
-            self.scheme.replace("webdav", "http"), self.netloc, self._spath
-        )
+        return f'{self.scheme.replace("webdav", "http")}://{self.netloc}{self._spath}'

@@ -369,8 +369,7 @@ class ForeachDefinition:
             )
 
     def _warn_if_overwriting(self, keys: List[str]):
-        warn_for = [k for k in keys if k in self.context]
-        if warn_for:
+        if warn_for := [k for k in keys if k in self.context]:
             linking_verb = "is" if len(warn_for) == 1 else "are"
             logger.warning(
                 "%s %s already specified, "

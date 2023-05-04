@@ -14,7 +14,7 @@ from tests.utils import cd
 
 class TestMove(TestDvc):
     def test(self):
-        dst = self.FOO + "1"
+        dst = f"{self.FOO}1"
         self.dvc.add(self.FOO)
         self.dvc.move(self.FOO, dst)
 
@@ -45,7 +45,7 @@ class TestCmdMove(TestDvc):
         self.assertEqual(len(stages), 1)
         self.assertTrue(stages[0] is not None)
 
-        ret = main(["move", self.FOO, self.FOO + "1"])
+        ret = main(["move", self.FOO, f"{self.FOO}1"])
         self.assertEqual(ret, 0)
 
         ret = main(["move", "non-existing-file", "dst"])

@@ -46,7 +46,7 @@ class TestRepro(SingleStageRun, TestDvc):
         self.assertTrue(self.foo_stage is not None)
 
         self.file1 = "file1"
-        self.file1_stage = self.file1 + ".dvc"
+        self.file1_stage = f"{self.file1}.dvc"
         self.stage = self._run(
             fname=self.file1_stage,
             outs=[self.file1],
@@ -214,7 +214,7 @@ class TestReproDepUnderDir(SingleStageRun, TestDvc):
 
         file1 = "file1"
         stage = self._run(
-            fname=file1 + ".dvc",
+            fname=f"{file1}.dvc",
             outs=[file1],
             deps=[self.DATA, self.CODE],
             cmd=f"python {self.CODE} {self.DATA} {file1}",
@@ -243,7 +243,7 @@ class TestReproDepDirWithOutputsUnderIt(SingleStageRun, TestDvc):
 
         deps = [self.DATA, self.DATA_SUB]
         stage = self.dvc.run(
-            cmd="ls {}".format(" ".join(deps)),
+            cmd=f'ls {" ".join(deps)}',
             fname="dvcfile2.dvc",
             deps=deps,
             single_stage=True,
@@ -251,7 +251,7 @@ class TestReproDepDirWithOutputsUnderIt(SingleStageRun, TestDvc):
         self.assertTrue(stage is not None)
 
         file1 = "file1"
-        file1_stage = file1 + ".dvc"
+        file1_stage = f"{file1}.dvc"
         stage = self._run(
             fname=file1_stage,
             deps=[self.DATA_DIR],
@@ -288,9 +288,7 @@ class TestReproChangedCode(TestRepro):
     def swap_code(self):
         os.unlink(self.CODE)
         new_contents = self.CODE_CONTENTS
-        new_contents += "\nshutil.copyfile('{}', " "sys.argv[2])\n".format(
-            self.BAR
-        )
+        new_contents += f"\nshutil.copyfile('{self.BAR}', sys.argv[2])\n"
         self.create(self.CODE, new_contents)
 
 
@@ -337,9 +335,7 @@ class TestReproDryNoExec(TestDvc):
             idir = f"idir{d}"
             odir = f"odir{d}"
 
-            deps.append("-d")
-            deps.append(odir)
-
+            deps.extend(("-d", odir))
             os.mkdir(idir)
 
             f = os.path.join(idir, "file")
@@ -355,8 +351,7 @@ class TestReproDryNoExec(TestDvc):
                     idir,
                     "-o",
                     odir,
-                    "python -c 'import shutil; "
-                    'shutil.copytree("{}", "{}")\''.format(idir, odir),
+                    f"""python -c 'import shutil; shutil.copytree("{idir}", "{odir}")\'""",
                 ]
             )
             self.assertEqual(ret, 0)
@@ -369,9 +364,7 @@ class TestReproDryNoExec(TestDvc):
                 "--file",
                 DVC_FILE,
                 *deps,
-                "ls {}".format(
-                    " ".join(dep for i, dep in enumerate(deps) if i % 2)
-                ),
+                f'ls {" ".join(dep for i, dep in enumerate(deps) if i % 2)}',
             ]
         )
         self.assertEqual(ret, 0)
@@ -386,7 +379,7 @@ class TestReproChangedDeepData(TestReproChangedData):
 
         self.file2 = "file2"
         self.stage = self._run(
-            fname=self.file2 + ".dvc",
+            fname=f"{self.file2}.dvc",
             outs=[self.file2],
             deps=[self.file1, self.CODE],
             cmd=f"python {self.CODE} {self.file1} {self.file2}",
@@ -482,7 +475,7 @@ class TestReproPipelines(SingleStageRun, TestDvc):
 
         self.file1 = "file1"
         self.file1_stage = self.dvc.run(
-            fname=self.file1 + ".dvc",
+            fname=f"{self.file1}.dvc",
             outs=[self.file1],
             deps=[self.FOO, self.CODE],
             cmd=f"python {self.CODE} {self.FOO} {self.file1}",
@@ -491,7 +484,7 @@ class TestReproPipelines(SingleStageRun, TestDvc):
 
         self.file2 = "file2"
         self.file2_stage = self._run(
-            fname=self.file2 + ".dvc",
+            fname=f"{self.file2}.dvc",
             outs=[self.file2],
             deps=[self.BAR, self.CODE],
             cmd=f"python {self.CODE} {self.BAR} {self.file2}",
@@ -513,7 +506,7 @@ class TestReproFrozen(TestReproChangedData):
     def test(self):
         file2 = "file2"
         file2_stage = self._run(
-            fname=file2 + ".dvc",
+            fname=f"{file2}.dvc",
             outs=[file2],
             deps=[self.file1, self.CODE],
             cmd=f"python {self.CODE} {self.file1} {file2}",
@@ -551,7 +544,7 @@ class TestReproFrozen(TestReproChangedData):
 class TestReproFrozenCallback(SingleStageRun, TestDvc):
     def test(self):
         file1 = "file1"
-        file1_stage = file1 + ".dvc"
+        file1_stage = f"{file1}.dvc"
         # NOTE: purposefully not specifying deps or outs
         # to create a callback stage.
         stage = self._run(
@@ -598,7 +591,7 @@ class TestReproMetricsAddUnchanged(TestDvc):
         self.assertTrue(stages[0] is not None)
 
         file1 = "file1"
-        file1_stage = file1 + ".dvc"
+        file1_stage = f"{file1}.dvc"
         self.dvc.run(
             fname=file1_stage,
             outs_no_cache=[file1],
@@ -627,9 +620,7 @@ class TestReproMetricsAddUnchanged(TestDvc):
 
 class TestReproPhony(TestReproChangedData):
     def test(self):
-        stage = self._run(
-            cmd="cat " + self.file1, deps=[self.file1], name="no_cmd"
-        )
+        stage = self._run(cmd=f"cat {self.file1}", deps=[self.file1], name="no_cmd")
 
         self.swap_foo_with_bar()
 
@@ -729,7 +720,7 @@ class TestReproChangedDirData(SingleStageRun, TestDvc):
         self.assertTrue(stages[0] is not None)
 
         # Check that dvc registers mtime change for the directory.
-        System.hardlink(self.DATA_SUB, self.DATA_SUB + ".lnk")
+        System.hardlink(self.DATA_SUB, f"{self.DATA_SUB}.lnk")
         stages = self.dvc.reproduce(target)
         self.assertEqual(len(stages), 1)
         self.assertTrue(stages[0] is not None)
@@ -766,7 +757,7 @@ class TestReproShell(TestDvc):
             return
 
         fname = "shell.txt"
-        stage = fname + ".dvc"
+        stage = f"{fname}.dvc"
 
         self.dvc.run(
             fname=stage,
@@ -953,19 +944,16 @@ def repro_dir(tmp_dir, dvc, run_copy):
         }
     )
 
-    stages = {}
-
     origin_copy = tmp_dir / "origin_copy"
     stage = run_copy("origin_data", os.fspath(origin_copy), single_stage=True)
     assert stage is not None
     assert origin_copy.read_text() == "origin data content"
-    stages["origin_copy"] = stage
-
+    stages = {"origin_copy": stage}
     origin_copy_2 = tmp_dir / "dir" / "origin_copy_2"
     stage = run_copy(
         os.fspath(origin_copy),
         os.fspath(origin_copy_2),
-        fname=os.fspath(origin_copy_2) + ".dvc",
+        fname=f"{os.fspath(origin_copy_2)}.dvc",
         single_stage=True,
     )
     assert stage is not None
@@ -977,7 +965,7 @@ def repro_dir(tmp_dir, dvc, run_copy):
     stage = run_copy(
         os.fspath(dir_file_path),
         os.fspath(dir_file_copy),
-        fname=os.fspath(dir_file_copy) + ".dvc",
+        fname=f"{os.fspath(dir_file_copy)}.dvc",
         single_stage=True,
     )
     assert stage is not None
@@ -987,7 +975,7 @@ def repro_dir(tmp_dir, dvc, run_copy):
     last_stage = tmp_dir / "dir" / DVC_FILE
     deps = [os.fspath(origin_copy_2), os.fspath(dir_file_copy)]
     stage = dvc.run(
-        cmd="echo {}".format(" ".join(deps)),
+        cmd=f'echo {" ".join(deps)}',
         fname=os.fspath(last_stage),
         deps=deps,
         single_stage=True,
@@ -1142,11 +1130,11 @@ def test_dvc_formatting_retained(tmp_dir, dvc, run_copy):
 def _format_dvc_line(line):
     # Add line comment for all cache and md5 keys
     if "cache:" in line or "md5:" in line:
-        return line + " # line comment"
+        return f"{line} # line comment"
     # Format command as one word per line
     if line.startswith("cmd: "):
         pre, command = line.split(None, 1)
-        return pre + " >\n" + "\n".join("  " + s for s in command.split())
+        return pre + " >\n" + "\n".join(f"  {s}" for s in command.split())
     return line
 
 

@@ -61,9 +61,7 @@ class AzureFileSystem(CallbackMixin, ObjectFSWrapper):
     @staticmethod
     def _get_kwargs_from_urls(urlpath):
         ops = infer_storage_options(urlpath)
-        if "host" in ops:
-            return {"bucket": ops["host"]}
-        return {}
+        return {"bucket": ops["host"]} if "host" in ops else {}
 
     def _prepare_credentials(self, **config):
         from azure.identity.aio import DefaultAzureCredential
@@ -71,11 +69,12 @@ class AzureFileSystem(CallbackMixin, ObjectFSWrapper):
         # Disable spam from failed cred types for DefaultAzureCredential
         logging.getLogger("azure.identity.aio").setLevel(logging.ERROR)
 
-        login_info = {}
-        login_info["connection_string"] = config.get(
-            "connection_string",
-            _az_config().get("storage", "connection_string", None),
-        )
+        login_info = {
+            "connection_string": config.get(
+                "connection_string",
+                _az_config().get("storage", "connection_string", None),
+            )
+        }
         login_info["account_name"] = config.get(
             "account_name", _az_config().get("storage", "account", None)
         )

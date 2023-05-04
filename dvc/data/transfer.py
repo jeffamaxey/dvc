@@ -79,8 +79,7 @@ def _do_transfer(
         bound_file_ids = all_file_ids & entry_ids
         all_file_ids -= entry_ids
 
-        dir_fails = sum(processor(bound_file_ids))
-        if dir_fails:
+        if dir_fails := sum(processor(bound_file_ids)):
             logger.debug(
                 "failed to upload full contents of '%s', "
                 "aborting .dir file upload",

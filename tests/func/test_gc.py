@@ -28,7 +28,7 @@ class TestGC(TestDvcGit):
 
         self.bad_cache = []
         for i in ["123", "234", "345"]:
-            path = os.path.join(self.dvc.odb.local.cache_dir, i[0:2], i[2:])
+            path = os.path.join(self.dvc.odb.local.cache_dir, i[:2], i[2:])
             self.create(path, i)
             self.bad_cache.append(path)
 
@@ -52,9 +52,9 @@ class TestGC(TestDvcGit):
 
 class TestGCBranchesTags(TestDvcGit):
     def _check_cache(self, num):
-        total = 0
-        for _, _, files in os.walk(os.path.join(".dvc", "cache")):
-            total += len(files)
+        total = sum(
+            len(files) for _, _, files in os.walk(os.path.join(".dvc", "cache"))
+        )
         self.assertEqual(total, num)
 
     def test(self):
@@ -112,9 +112,9 @@ class TestGCBranchesTags(TestDvcGit):
 
 class TestGCMultipleDvcRepos(TestDvcGit):
     def _check_cache(self, num):
-        total = 0
-        for _, _, files in os.walk(os.path.join(".dvc", "cache")):
-            total += len(files)
+        total = sum(
+            len(files) for _, _, files in os.walk(os.path.join(".dvc", "cache"))
+        )
         self.assertEqual(total, num)
 
     def setUp(self):

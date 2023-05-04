@@ -175,9 +175,7 @@ class Console:
     ) -> Optional[str]:
         while True:
             try:
-                response = self.rich_console.input(
-                    text + " ", markup=False, password=password
-                )
+                response = self.rich_console.input(f"{text} ", markup=False, password=password)
             except EOFError:
                 return None
 
@@ -201,9 +199,7 @@ class Console:
         """
         text = f"{statement} [y/n]:"
         answer = self.prompt(text, choices=["yes", "no", "y", "n"])
-        if not answer:
-            return False
-        return answer.startswith("y")
+        return answer.startswith("y") if answer else False
 
     @cached_property
     def rich_console(self):

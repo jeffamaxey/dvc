@@ -24,9 +24,7 @@ class CmdImport(CmdBase):
             )
         except DvcException:
             logger.exception(
-                "failed to import '{}' from '{}'.".format(
-                    self.args.path, self.args.url
-                )
+                f"failed to import '{self.args.path}' from '{self.args.url}'."
             )
             return 1
         return 0

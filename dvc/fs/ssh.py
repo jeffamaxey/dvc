@@ -50,22 +50,18 @@ class SSHFileSystem(FSSpecWrapper):
         self.CAN_TRAVERSE = True
         from sshfs.config import parse_config
 
-        login_info = {}
-
         try:
             user_ssh_config = parse_config(host=config["host"])
         except FileNotFoundError:
             user_ssh_config = {}
 
-        login_info["host"] = user_ssh_config.get("Hostname", config["host"])
-
-        login_info["username"] = (
-            config.get("user")
+        login_info = {
+            "host": user_ssh_config.get("Hostname", config["host"]),
+            "username": config.get("user")
             or config.get("username")
             or user_ssh_config.get("User")
-            or getpass.getuser()
-        )
-
+            or getpass.getuser(),
+        }
         login_info["port"] = (
             config.get("port")
             or silent(int)(user_ssh_config.get("Port"))

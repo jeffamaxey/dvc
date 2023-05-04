@@ -14,10 +14,11 @@ class GSFileSystem(CallbackMixin, ObjectFSWrapper):
     PARAM_CHECKSUM = "etag"
 
     def _prepare_credentials(self, **config):
-        login_info = {"consistency": None}
-        login_info["project"] = config.get("projectname")
-        login_info["token"] = config.get("credentialpath")
-        return login_info
+        return {
+            "consistency": None,
+            "project": config.get("projectname"),
+            "token": config.get("credentialpath"),
+        }
 
     @wrap_prop(threading.Lock())
     @cached_property

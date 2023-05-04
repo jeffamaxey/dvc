@@ -26,7 +26,7 @@ def create_summary(out):
 
     metrics, plots = out.repo.live.show(out.fs_path)
 
-    html_path = os.path.join(out.fs_path + "_dvc_plots", "index.html")
+    html_path = os.path.join(f"{out.fs_path}_dvc_plots", "index.html")
 
     renderers = match_renderers(
         plots, templates_dir=out.repo.plots.templates_dir
@@ -45,9 +45,7 @@ def summary_fs_path(out: "Output") -> Optional[str]:
     has_summary = True
     if isinstance(out.live, dict):
         has_summary = out.live.get(Output.PARAM_LIVE_SUMMARY, True)
-    if has_summary:
-        return out.fs.path.with_suffix(out.fs_path, ".json")
-    return None
+    return out.fs.path.with_suffix(out.fs_path, ".json") if has_summary else None
 
 
 class Live:
@@ -58,7 +56,7 @@ class Live:
         if revs:
             revs = ["workspace", *revs]
 
-        metrics_path = target + ".json"
+        metrics_path = f"{target}.json"
 
         metrics = self.repo.metrics.show(targets=[metrics_path])
         plots = self.repo.plots.show(target, recursive=True, revs=revs)

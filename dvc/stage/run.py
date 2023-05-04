@@ -64,7 +64,7 @@ def prepare_kwargs(stage, checkpoint_func=None, run_env=None):
     #                                                            #L1426
     # [2] https://github.com/iterative/dvc/issues/2506
     #                                           #issuecomment-535396799
-    kwargs["shell"] = True if os.name == "nt" else False
+    kwargs["shell"] = os.name == "nt"
     return kwargs
 
 
@@ -116,8 +116,7 @@ def _get_monitor_tasks(stage, checkpoint_func, proc):
 
         result.append(CheckpointTask(stage, checkpoint_func, proc))
 
-    live = first(o for o in stage.outs if (o.live and o.live["html"]))
-    if live:
+    if live := first(o for o in stage.outs if (o.live and o.live["html"])):
         from .monitor import LiveTask
 
         result.append(LiveTask(stage, live, proc))

@@ -39,11 +39,10 @@ def _can_hash(stage):
         if not (dep.scheme == "local" and dep.def_path and dep.get_hash()):
             return False
 
-    for out in stage.outs:
-        if out.scheme != "local" or not out.def_path or out.persist:
-            return False
-
-    return True
+    return not any(
+        out.scheme != "local" or not out.def_path or out.persist
+        for out in stage.outs
+    )
 
 
 def _get_stage_hash(stage):
@@ -94,8 +93,7 @@ class StageCache:
             return None
 
         for value in os.listdir(cache_dir):
-            cache = self._load_cache(key, value)
-            if cache:
+            if cache := self._load_cache(key, value):
                 return cache
 
         return None

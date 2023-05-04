@@ -16,10 +16,9 @@ def get_files(plots_data: Dict) -> List:
 
 def group_by_filename(plots_data: Dict) -> Dict:
     files = get_files(plots_data)
-    grouped = {
+    return {
         file: dpath.util.search(plots_data, ["*", "*", file]) for file in files
     }
-    return grouped
 
 
 def squash_plots_properties(data: Dict) -> Dict:

@@ -130,8 +130,8 @@ class CheckoutBase(TestDvcGit):
         stages = self.dvc.add(fname)
         self.assertEqual(len(stages), 1)
         self.assertTrue(stages[0] is not None)
-        self.dvc.scm.add([fname + ".dvc", ".gitignore"])
-        self.dvc.scm.commit("adding " + fname)
+        self.dvc.scm.add([f"{fname}.dvc", ".gitignore"])
+        self.dvc.scm.commit(f"adding {fname}")
 
     def read_ignored(self):
         with open(self.GIT_IGNORE, encoding="utf-8") as f:
@@ -268,8 +268,8 @@ class TestGitIgnoreBasic(CheckoutBase):
 
         self.assertEqual(len(ignored), 2)
 
-        self.assertIn("/" + fname1, ignored)
-        self.assertIn("/" + fname2, ignored)
+        self.assertIn(f"/{fname1}", ignored)
+        self.assertIn(f"/{fname2}", ignored)
 
 
 class TestGitIgnoreWhenCheckout(CheckoutBase):
@@ -295,13 +295,13 @@ class TestGitIgnoreWhenCheckout(CheckoutBase):
         ignored = self.read_ignored()
 
         self.assertEqual(len(ignored), 1)
-        self.assertIn("/" + fname_master, ignored)
+        self.assertIn(f"/{fname_master}", ignored)
 
         self.dvc.scm.checkout(branch_1)
         ret = main(["checkout", "--force"])
         self.assertEqual(ret, 0)
         ignored = self.read_ignored()
-        self.assertIn("/" + fname_branch, ignored)
+        self.assertIn(f"/{fname_branch}", ignored)
 
 
 class TestCheckoutMissingMd5InStageFile(TestRepro):
@@ -338,7 +338,7 @@ class TestCheckoutEmptyDir(TestDvc):
 
 class TestCheckoutNotCachedFile(TestDvc):
     def test(self):
-        cmd = "python {} {} {}".format(self.CODE, self.FOO, "out")
+        cmd = f"python {self.CODE} {self.FOO} out"
 
         self.dvc.add(self.FOO)
         stage = self.dvc.run(
@@ -444,7 +444,7 @@ class TestCheckoutRecursiveNotDirectory(TestDvc):
         ret = main(["add", self.FOO])
         self.assertEqual(0, ret)
 
-        stats = self.dvc.checkout(targets=[self.FOO + ".dvc"], recursive=True)
+        stats = self.dvc.checkout(targets=[f"{self.FOO}.dvc"], recursive=True)
         assert stats == {"added": [], "modified": [], "deleted": []}
 
 
@@ -466,7 +466,7 @@ class TestCheckoutMovedCacheDirWithSymlinks(TestDvc):
         old_data_link = os.path.realpath(self.DATA)
 
         old_cache_dir = self.dvc.odb.local.cache_dir
-        new_cache_dir = old_cache_dir + "_new"
+        new_cache_dir = f"{old_cache_dir}_new"
         os.rename(old_cache_dir, new_cache_dir)
 
         ret = main(["cache", "dir", new_cache_dir])
@@ -546,7 +546,7 @@ def test_partial_checkout(tmp_dir, dvc, target):
     tmp_dir.dvc_gen({"dir": {"subdir": {"file": "file"}, "other": "other"}})
     shutil.rmtree("dir")
     stats = dvc.checkout([target])
-    assert stats["added"] == ["dir" + os.sep]
+    assert stats["added"] == [f"dir{os.sep}"]
     assert list(walk_files("dir")) == [os.path.join("dir", "subdir", "file")]
 
 
@@ -573,11 +573,11 @@ def test_stats_on_checkout(tmp_dir, dvc, scm):
     )
     scm.checkout("HEAD~")
     stats = dvc.checkout()
-    assert set(stats["deleted"]) == {"dir" + os.sep, "foo", "bar"}
+    assert set(stats["deleted"]) == {f"dir{os.sep}", "foo", "bar"}
 
     scm.checkout("-")
     stats = dvc.checkout()
-    assert set(stats["added"]) == {"bar", "dir" + os.sep, "foo"}
+    assert set(stats["added"]) == {"bar", f"dir{os.sep}", "foo"}
 
     tmp_dir.gen({"lorem": "lorem", "bar": "new bar", "dir2": {"file": "file"}})
     (tmp_dir / "foo").unlink()
@@ -588,12 +588,12 @@ def test_stats_on_checkout(tmp_dir, dvc, scm):
     stats = dvc.checkout()
     assert set(stats["modified"]) == {"bar"}
     assert set(stats["added"]) == {"foo"}
-    assert set(stats["deleted"]) == {"lorem", "dir2" + os.sep}
+    assert set(stats["deleted"]) == {"lorem", f"dir2{os.sep}"}
 
     scm.checkout("-")
     stats = dvc.checkout()
     assert set(stats["modified"]) == {"bar"}
-    assert set(stats["added"]) == {"dir2" + os.sep, "lorem"}
+    assert set(stats["added"]) == {f"dir2{os.sep}", "lorem"}
     assert set(stats["deleted"]) == {"foo"}
 
 
@@ -632,11 +632,11 @@ def test_stats_on_added_file_from_tracked_dir(tmp_dir, dvc, scm):
     tmp_dir.gen("dir/subdir/newfile", "newfile")
     tmp_dir.dvc_add("dir", commit="add newfile")
     scm.checkout("HEAD~")
-    assert dvc.checkout() == {**empty_checkout, "modified": ["dir" + os.sep]}
+    assert dvc.checkout() == {**empty_checkout, "modified": [f"dir{os.sep}"]}
     assert dvc.checkout() == empty_checkout
 
     scm.checkout("-")
-    assert dvc.checkout() == {**empty_checkout, "modified": ["dir" + os.sep]}
+    assert dvc.checkout() == {**empty_checkout, "modified": [f"dir{os.sep}"]}
     assert dvc.checkout() == empty_checkout
 
 
@@ -649,11 +649,11 @@ def test_stats_on_updated_file_from_tracked_dir(tmp_dir, dvc, scm):
     tmp_dir.gen("dir/subdir/file", "what file?")
     tmp_dir.dvc_add("dir", commit="update file")
     scm.checkout("HEAD~")
-    assert dvc.checkout() == {**empty_checkout, "modified": ["dir" + os.sep]}
+    assert dvc.checkout() == {**empty_checkout, "modified": [f"dir{os.sep}"]}
     assert dvc.checkout() == empty_checkout
 
     scm.checkout("-")
-    assert dvc.checkout() == {**empty_checkout, "modified": ["dir" + os.sep]}
+    assert dvc.checkout() == {**empty_checkout, "modified": [f"dir{os.sep}"]}
     assert dvc.checkout() == empty_checkout
 
 
@@ -666,11 +666,11 @@ def test_stats_on_removed_file_from_tracked_dir(tmp_dir, dvc, scm):
     (tmp_dir / "dir" / "subdir" / "file").unlink()
     tmp_dir.dvc_add("dir", commit="removed file from subdir")
     scm.checkout("HEAD~")
-    assert dvc.checkout() == {**empty_checkout, "modified": ["dir" + os.sep]}
+    assert dvc.checkout() == {**empty_checkout, "modified": [f"dir{os.sep}"]}
     assert dvc.checkout() == empty_checkout
 
     scm.checkout("-")
-    assert dvc.checkout() == {**empty_checkout, "modified": ["dir" + os.sep]}
+    assert dvc.checkout() == {**empty_checkout, "modified": [f"dir{os.sep}"]}
     assert dvc.checkout() == empty_checkout
 
 

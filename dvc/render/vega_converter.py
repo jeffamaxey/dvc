@@ -126,8 +126,7 @@ class VegaConverter:
         self.steps = [(_name, fn) for _name, fn in self.steps if _name != name]
 
     def _infer_fields(self):
-        fields = self.props.get("fields", set())
-        if fields:
+        if fields := self.props.get("fields", set()):
             fields = {
                 *fields,
                 self.props.get("x", None),

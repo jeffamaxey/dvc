@@ -13,4 +13,4 @@ from dvc.fs import HDFSFileSystem
 )
 def test_hdfs_unstrip_protocol(fs_args, expected_url):
     fs = HDFSFileSystem(**fs_args)
-    assert fs.unstrip_protocol("/path") == expected_url + "/path"
+    assert fs.unstrip_protocol("/path") == f"{expected_url}/path"

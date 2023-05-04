@@ -19,7 +19,7 @@ class CmdLive(CmdBase):
         if plots:
             from pathlib import Path
 
-            output = Path.cwd() / (self.args.target + "_html") / "index.html"
+            output = Path.cwd() / f"{self.args.target}_html" / "index.html"
 
             renderers = match_renderers(
                 plots, templates_dir=self.repo.plots.templates_dir

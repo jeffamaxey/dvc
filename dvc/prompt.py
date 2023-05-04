@@ -13,7 +13,7 @@ def ask(prompt, limited_to=None):
 
     while True:
         try:
-            answer = input(prompt + " ").lower()
+            answer = input(f"{prompt} ").lower()
         except EOFError:
             return None
 

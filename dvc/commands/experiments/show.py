@@ -190,10 +190,7 @@ def _sort_column(sort_by, metric_names, param_names):
         return matches.pop()
     if len(matches) > 1:
         raise InvalidArgumentError(
-            "Ambiguous sort column '{}' matched '{}'".format(
-                sort_by,
-                ", ".join([f"{path}:{name}" for path, name, _ in matches]),
-            )
+            f"""Ambiguous sort column '{sort_by}' matched '{", ".join([f"{path}:{name}" for path, name, _ in matches])}'"""
         )
     raise InvalidArgumentError(f"Unknown sort column '{sort_by}'")
 
@@ -225,10 +222,7 @@ def _format_time(datetime_obj, fill_value=FILL_VALUE, iso=False):
     if iso:
         return datetime_obj.isoformat()
 
-    if datetime_obj.date() == date.today():
-        fmt = "%I:%M %p"
-    else:
-        fmt = "%b %d, %Y"
+    fmt = "%I:%M %p" if datetime_obj.date() == date.today() else "%b %d, %Y"
     return datetime_obj.strftime(fmt)
 
 
@@ -343,7 +337,7 @@ def show_experiments(
 
     names = {**metric_names, **param_names}
     counter = Counter(flatten_list([list(a.keys()) for a in names.values()]))
-    counter.update(headers)
+    counter |= headers
     metric_headers = _normalize_headers(metric_names, counter)
     param_headers = _normalize_headers(param_names, counter)
 
@@ -384,30 +378,26 @@ def show_experiments(
         "params": param_headers,
         "deps": deps_names,
     }
-    styles = {
-        "Experiment": {"no_wrap": True, "header_style": "black on grey93"},
-        "Created": {"header_style": "black on grey93"},
-        "State": {"header_style": "black on grey93"},
-        "Executor": {"header_style": "black on grey93"},
-    }
     header_bg_colors = {
         "metrics": "cornsilk1",
         "params": "light_cyan1",
         "deps": "plum2",
     }
-    styles.update(
-        {
-            header: {
-                "justify": "right" if typ == "metrics" else "left",
-                "header_style": f"black on {header_bg_colors[typ]}",
-                "collapse": idx != 0,
-                "no_wrap": typ == "metrics",
-            }
-            for typ, hs in headers.items()
-            for idx, header in enumerate(hs)
+    styles = {
+        "Experiment": {"no_wrap": True, "header_style": "black on grey93"},
+        "Created": {"header_style": "black on grey93"},
+        "State": {"header_style": "black on grey93"},
+        "Executor": {"header_style": "black on grey93"},
+    } | {
+        header: {
+            "justify": "right" if typ == "metrics" else "left",
+            "header_style": f"black on {header_bg_colors[typ]}",
+            "collapse": idx != 0,
+            "no_wrap": typ == "metrics",
         }
-    )
-
+        for typ, hs in headers.items()
+        for idx, header in enumerate(hs)
+    }
     if kwargs.get("only_changed", False) or pcp:
         td.drop_duplicates("cols", ignore_empty=False)
 
@@ -494,7 +484,7 @@ class CmdExperimentsShow(CmdBase):
                 else DEFAULT_PRECISION
             )
             fill_value = "" if self.args.csv else FILL_VALUE
-            iso = True if self.args.csv else False
+            iso = bool(self.args.csv)
 
             show_experiments(
                 all_experiments,

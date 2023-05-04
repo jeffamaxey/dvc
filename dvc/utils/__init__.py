@@ -31,11 +31,7 @@ def _fobj_md5(fobj, hash_md5, binary, progress_func=None):
         if not data:
             break
 
-        if binary:
-            chunk = data
-        else:
-            chunk = dos2unix(data)
-
+        chunk = data if binary else dos2unix(data)
         hash_md5.update(chunk)
         if progress_func:
             progress_func(len(data))
@@ -146,14 +142,10 @@ def fix_env(env=None):
     [1] http://pyinstaller.readthedocs.io/en/stable/runtime-information.html
     [2] https://github.com/pyenv/pyenv/issues/985
     """
-    if env is None:
-        env = os.environ.copy()
-    else:
-        env = env.copy()
-
+    env = os.environ.copy() if env is None else env.copy()
     if is_binary():
         lp_key = "LD_LIBRARY_PATH"
-        lp_orig = env.get(lp_key + "_ORIG", None)
+        lp_orig = env.get(f"{lp_key}_ORIG", None)
         if lp_orig is not None:
             env[lp_key] = lp_orig
         else:
@@ -215,7 +207,7 @@ def tmp_fname(fname=""):
     """Temporary name for a partial download"""
     from shortuuid import uuid
 
-    return os.fspath(fname) + "." + uuid() + ".tmp"
+    return f"{os.fspath(fname)}.{uuid()}.tmp"
 
 
 def current_timestamp():
@@ -286,13 +278,11 @@ def boxify(message, border_color=None):
         for line in lines
     ]
 
-    box_str = "{margin}{padding}{content}{padding}{margin}".format(
+    return "{margin}{padding}{content}{padding}{margin}".format(
         margin=colorize(margin, color=border_color),
         padding="".join(padding_lines),
         content="".join(content_lines),
     )
-
-    return box_str
 
 
 def _visual_width(line):
@@ -447,11 +437,7 @@ def parse_target(
 
     if path:
         if os.path.basename(path) == PIPELINE_LOCK:
-            raise DvcException(
-                "Did you mean: `{}`?".format(
-                    target.replace(".lock", ".yaml", 1)
-                )
-            )
+            raise DvcException(f'Did you mean: `{target.replace(".lock", ".yaml", 1)}`?')
         if not name:
             ret = (target, None)
             return ret if is_valid_filename(target) else ret[::-1]
@@ -506,8 +492,8 @@ def onerror_collect(result: Dict, exception: Exception, *args, **kwargs):
 def errored_revisions(rev_data: Dict) -> List:
     from dvc.utils.collections import nested_contains
 
-    result = []
-    for revision, data in rev_data.items():
-        if nested_contains(data, "error"):
-            result.append(revision)
-    return result
+    return [
+        revision
+        for revision, data in rev_data.items()
+        if nested_contains(data, "error")
+    ]

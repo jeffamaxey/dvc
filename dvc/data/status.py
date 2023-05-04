@@ -35,8 +35,7 @@ def _indexed_dir_hashes(odb, index, dir_objs, name, cache_odb, jobs=None):
     indexed_dir_exists = set()
     if indexed_dirs:
         indexed_dir_exists.update(odb.list_hashes_exists(indexed_dirs, jobs))
-        missing_dirs = indexed_dirs.difference(indexed_dir_exists)
-        if missing_dirs:
+        if missing_dirs := indexed_dirs.difference(indexed_dir_exists):
             logger.debug(
                 "Remote cache missing indexed .dir hashes '%s', "
                 "clearing remote index",

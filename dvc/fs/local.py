@@ -73,10 +73,7 @@ class LocalFileSystem(FileSystem):
         if self.isfile(path) and os.path.getsize(path) == 0:
             return True
 
-        if self.isdir(path) and len(os.listdir(path)) == 0:
-            return True
-
-        return False
+        return bool(self.isdir(path) and len(os.listdir(path)) == 0)
 
     def remove(self, path):
         remove(path)

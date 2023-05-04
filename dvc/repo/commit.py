@@ -30,8 +30,7 @@ def prompt_to_commit(stage, changes, force=False):
 
     if not (force or prompt.confirm(_prepare_message(stage, changes))):
         raise StageCommitError(
-            "unable to commit changed {}. Use `-f|--force` to "
-            "force.".format(stage)
+            f"unable to commit changed {stage}. Use `-f|--force` to force."
         )
 
 

@@ -27,19 +27,14 @@ class HashedStreamReader(io.IOBase):
 
     @cached_property
     def _reader(self):
-        if hasattr(self.fobj, "read1"):
-            return self.fobj.read1
-        return self.fobj.read
+        return self.fobj.read1 if hasattr(self.fobj, "read1") else self.fobj.read
 
     def read(self, n=-1):
         chunk = self._reader(n)
         if self.is_text_file is None:
             self.is_text_file = istextblock(chunk[:DEFAULT_CHUNK_SIZE])
 
-        if self.is_text_file:
-            data = dos2unix(chunk)
-        else:
-            data = chunk
+        data = dos2unix(chunk) if self.is_text_file else chunk
         self.md5.update(data)
         self.total_read += len(data)
 

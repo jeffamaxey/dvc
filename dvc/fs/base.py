@@ -108,8 +108,7 @@ class FileSystem:
             "conda": f"conda install -c conda-forge dvc-{scheme}",
         }
 
-        cmd = by_pkg.get(PKG)
-        if cmd:
+        if cmd := by_pkg.get(PKG):
             link = format_link("https://dvc.org/doc/install")
             hint = (
                 f"To install dvc with those dependencies, run:\n"
@@ -328,11 +327,7 @@ class FileSystem:
             # downloaded a complete directory, while having a partial one,
             # which might cause unexpected results in his pipeline.
             for future in as_completed(futures):
-                # NOTE: executor won't let us raise until all futures that
-                # it has are finished, so we need to cancel them ourselves
-                # before re-raising.
-                exc = future.exception()
-                if exc:
+                if exc := future.exception():
                     for entry in futures:
                         entry.cancel()
                     raise exc

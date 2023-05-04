@@ -29,7 +29,7 @@ class HDFSFileSystem(CallbackMixin, FSSpecWrapper):
         host = self.fs_args["host"]
         port = self.fs_args.get("port")
         netloc = host + (f":{port}" if port else "")
-        return "hdfs://" + netloc + "/" + path.lstrip("/")
+        return f"hdfs://{netloc}/" + path.lstrip("/")
 
     @staticmethod
     def _get_kwargs_from_urls(urlpath):
@@ -66,15 +66,12 @@ class HDFSFileSystem(CallbackMixin, FSSpecWrapper):
             return None
 
         match = CHECKSUM_REGEX.match(result)
-        if match is None:
-            return None
-
-        return match.group("checksum")
+        return None if match is None else match.group("checksum")
 
     def _run_command(self, cmd, env=None, user=None):
-        cmd = "hadoop fs -" + cmd
+        cmd = f"hadoop fs -{cmd}"
         if user:
-            cmd = f"HADOOP_USER_NAME={user} " + cmd
+            cmd = f"HADOOP_USER_NAME={user} {cmd}"
 
         # NOTE: close_fds doesn't work with redirected stdin/stdout/stderr.
         # See https://github.com/iterative/dvc/issues/1197.

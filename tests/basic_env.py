@@ -105,7 +105,7 @@ class TestDirFixture:
             # to close that and it works on most of the tests, but not all.
             # Repos and thus git repos are created all over the dvc ;)
             if os.name == "nt" and exc.winerror == 32:
-                warnings.warn("Failed to remove test dir: " + str(exc))
+                warnings.warn(f"Failed to remove test dir: {str(exc)}")
             else:
                 raise
 

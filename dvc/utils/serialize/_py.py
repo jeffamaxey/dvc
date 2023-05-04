@@ -23,8 +23,7 @@ def parse_py(text, path):
     with reraise(SyntaxError, PythonFileCorruptedError(path)):
         tree = ast.parse(text, filename=path)
 
-    result = _ast_tree_to_dict(tree)
-    return result
+    return _ast_tree_to_dict(tree)
 
 
 def parse_py_for_update(text, path):
@@ -98,13 +97,9 @@ def _ast_tree_to_dict(tree, only_self_params=False, lineno=False):
     for _body in tree.body:
         try:
             if isinstance(_body, (ast.Assign, ast.AnnAssign)):
-                result.update(
-                    _ast_assign_to_dict(_body, only_self_params, lineno)
-                )
+                result |= _ast_assign_to_dict(_body, only_self_params, lineno)
             elif isinstance(_body, ast.ClassDef):
-                result.update(
-                    {_body.name: _ast_tree_to_dict(_body, lineno=lineno)}
-                )
+                result[_body.name] = _ast_tree_to_dict(_body, lineno=lineno)
             elif (
                 isinstance(_body, ast.FunctionDef) and _body.name == "__init__"
             ):
@@ -113,9 +108,7 @@ def _ast_tree_to_dict(tree, only_self_params=False, lineno=False):
                         _body, only_self_params=True, lineno=lineno
                     )
                 )
-        except ValueError:
-            continue
-        except AttributeError:
+        except (ValueError, AttributeError):
             continue
     return result
 
@@ -131,15 +124,15 @@ def _ast_assign_to_dict(assign, only_self_params=False, lineno=False):
         raise AttributeError
 
     if isinstance(assign.value, ast.Dict):
-        value = {}
-        for key, val in zip(assign.value.keys, assign.value.values):
-            if lineno:
-                value[ast.literal_eval(key)] = {
-                    "lineno": assign.lineno - 1,
-                    "value": ast.literal_eval(val),
-                }
-            else:
-                value[ast.literal_eval(key)] = ast.literal_eval(val)
+        value = {
+            ast.literal_eval(key): {
+                "lineno": assign.lineno - 1,
+                "value": ast.literal_eval(val),
+            }
+            if lineno
+            else ast.literal_eval(val)
+            for key, val in zip(assign.value.keys, assign.value.values)
+        }
     elif isinstance(assign.value, ast.List):
         value = [ast.literal_eval(val) for val in assign.value.elts]
     elif isinstance(assign.value, ast.Set):
